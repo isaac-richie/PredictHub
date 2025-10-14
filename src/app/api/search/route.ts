@@ -65,7 +65,7 @@ export async function GET(request: Request) {
         }),
 
       // Search LimitlessLabs
-      limitlessApi.getActiveMarkets(25, 0)
+      limitlessApi.getActiveMarkets(25)
         .then(markets => {
           const results = markets.filter(market => {
             const title = (market.title || market.question || '').toLowerCase();

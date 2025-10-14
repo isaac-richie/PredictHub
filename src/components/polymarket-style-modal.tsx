@@ -22,10 +22,21 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
   const fetchPriceHistory = useCallback(async () => {
     if (!market) return;
     
+    // LimitlessLabs doesn't support price history yet
+    if (market.platform === 'limitlesslabs') {
+      setPriceHistory([]);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
+      const apiEndpoint = market.platform === 'other' || market.platform === 'polkamarkets'
+        ? '/api/polkamarkets'
+        : '/api/polymarket';
+        
       const response = await fetch(
-        `/api/polymarket?endpoint=price-history&marketId=${market.id}&timeRange=${timeRange.toLowerCase()}&limit=500`
+        `${apiEndpoint}?endpoint=price-history&marketId=${market.id}&timeRange=${timeRange.toLowerCase()}&limit=500`
       );
       if (response.ok) {
         const data = await response.json();

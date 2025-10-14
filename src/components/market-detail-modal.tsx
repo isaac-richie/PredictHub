@@ -65,6 +65,13 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
   const fetchPriceHistory = async () => {
     if (!market) return;
     
+    // LimitlessLabs doesn't support price history yet
+    if (market.platform === 'limitlesslabs') {
+      setLoading(false);
+      setChartData([]);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -73,7 +80,7 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
       
       // Determine the correct API endpoint based on platform
       let apiEndpoint = '/api/polymarket';
-      if (market.platform === 'other') {
+      if (market.platform === 'other' || market.platform === 'polkamarkets') {
         apiEndpoint = '/api/polkamarkets';
       }
       
@@ -138,7 +145,7 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-medium text-sm"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Trade on {market.platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'}
+                Trade on {market.platform === 'polymarket' ? 'Polymarket' : market.platform === 'limitlesslabs' ? 'LimitlessLabs' : 'Polkamarkets'}
               </a>
               
               <button

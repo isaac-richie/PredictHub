@@ -76,6 +76,13 @@ export function ProductionMarketModal({ market, isOpen, onClose }: ProductionMar
   const fetchPriceHistory = useCallback(async () => {
     if (!market) return;
     
+    // LimitlessLabs doesn't support price history yet
+    if (market.platform === 'limitlesslabs') {
+      setLoading(false);
+      setChartData([]);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     

@@ -60,7 +60,7 @@ export async function GET(request: Request) {
 
     if (platform === 'all' || platform === 'limitlesslabs') {
       promises.push(
-        limitlessApi.getActiveMarkets(fetchLimit, offset)
+        limitlessApi.getActiveMarkets(fetchLimit)
           .then(markets => {
             console.log(`🔍 Load More API: LimitlessLabs data received: ${markets.length} markets`);
             return markets;

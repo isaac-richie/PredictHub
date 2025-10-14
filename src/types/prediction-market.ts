@@ -3,8 +3,9 @@ import { z } from 'zod';
 // Base prediction market schema
 export const PredictionMarketSchema = z.object({
   id: z.string(),
-  platform: z.enum(['polymarket', 'zeitgeist', 'omen', 'other']),
+  platform: z.enum(['polymarket', 'zeitgeist', 'omen', 'polkamarkets', 'limitlesslabs', 'other']),
   title: z.string(),
+  question: z.string().optional(),
   description: z.string().optional(),
   category: z.string().optional(),
   endDate: z.date(),
@@ -28,6 +29,15 @@ export const PredictionMarketSchema = z.object({
   tags: z.array(z.string()).optional(),
   imageUrl: z.string().url().optional(),
   externalUrl: z.string().url().optional(),
+  slug: z.string().optional(),
+  volumeNum: z.number().optional(),
+  liquidityNum: z.number().optional(),
+  openInterest: z.number().optional(),
+  outcomes: z.array(z.string()).optional(),
+  outcomePrices: z.array(z.string()).optional(),
+  conditionId: z.string().optional(),
+  startDate: z.date().optional(),
+  resolved: z.boolean().optional(),
   
   // Additional Polymarket-specific fields (optional for other platforms)
   volume24hr: z.number().optional(),
