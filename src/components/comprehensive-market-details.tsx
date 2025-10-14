@@ -55,8 +55,8 @@ export function ComprehensiveMarketDetails({ marketId, market }: ComprehensiveMa
         return `https://polkamarkets.com/market/${actualId}`;
         
       case 'limitlesslabs':
-        if (market?.slug) return `https://limitless.exchange/market/${market.slug}`;
-        return '#';
+        const limitlessId = marketId.replace(/^limitlesslabs_/, '');
+        return limitlessId ? `https://limitless.exchange/advanced/markets/${limitlessId}` : '#';
         
       default:
         return '#';

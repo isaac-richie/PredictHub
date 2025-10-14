@@ -45,8 +45,9 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
         return `https://polkamarkets.com/market/${actualId}`;
         
       case 'limitlesslabs':
-        if (market.slug) return `https://limitless.exchange/market/${market.slug}`;
-        return '#';
+        // Extract numeric ID from limitlesslabs_123 format
+        const limitlessId = market.id.replace(/^limitlesslabs_/, '');
+        return limitlessId ? `https://limitless.exchange/advanced/markets/${limitlessId}` : '#';
         
       default:
         return '#';

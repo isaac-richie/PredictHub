@@ -7,10 +7,13 @@ import { SimpleMarketCard } from './simple-market-card';
 import { PredictionMarket } from '@/types/prediction-market';
 import { PolymarketStyleModal } from './polymarket-style-modal';
 
-// SSR-safe date formatting function
-const formatDate = (dateInput: string | Date): string => {
+// SSR-safe date formatting function - handles both Date objects and ISO strings
+const formatDate = (dateInput: string | Date | undefined): string => {
   try {
-    const date = new Date(dateInput);
+    if (!dateInput) return 'N/A';
+    
+    // Convert to Date if it's a string
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     if (isNaN(date.getTime())) return 'Invalid Date';
     
     // Use a consistent format that works on both server and client

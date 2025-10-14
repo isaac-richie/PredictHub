@@ -12,7 +12,27 @@ async function getServerSideMarkets(limit: number = 300) {
     
     console.log('🔍 PredictHub: Featured markets ready for display');
     
-    return featuredMarkets;
+    // Serialize dates to strings to prevent hydration mismatch
+    const serializedMarkets = featuredMarkets.map(market => {
+      const safeDate = (date: Date | undefined) => {
+        if (!date) return undefined;
+        try {
+          return date.toISOString();
+        } catch {
+          return new Date().toISOString(); // Fallback to current date
+        }
+      };
+      
+      return {
+        ...market,
+        endDate: safeDate(market.endDate) || new Date().toISOString(),
+        createdAt: safeDate(market.createdAt) || new Date().toISOString(),
+        updatedAt: safeDate(market.updatedAt) || new Date().toISOString(),
+        startDate: market.startDate ? safeDate(market.startDate) : undefined,
+      };
+    });
+    
+    return serializedMarkets as any;
   } catch (error) {
     console.error('Error fetching featured markets:', error);
     return [];

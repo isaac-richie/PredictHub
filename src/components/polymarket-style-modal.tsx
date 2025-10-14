@@ -91,7 +91,7 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
     if (platformStr === 'polymarket') {
       return `https://polymarket.com/market/${cleanId}`;
     } else if (platformStr.includes('limitless')) {
-      return `https://limitless.exchange/market/${cleanId}`;
+      return `https://limitless.exchange/advanced/markets/${cleanId}`;
     } else if (platformStr.includes('polka') || platformStr === 'other') {
       return `https://polkamarkets.com/market/${cleanId}`;
     }

@@ -65,8 +65,8 @@ export function ProductionMarketModal({ market, isOpen, onClose }: ProductionMar
         const actualId = market.id.replace(/^polkamarkets-/, '');
         return `https://polkamarkets.com/market/${actualId}`;
       case 'limitlesslabs':
-        if (market.slug) return `https://limitless.exchange/market/${market.slug}`;
-        return '#';
+        const limitlessId = market.id.replace(/^limitlesslabs_/, '');
+        return limitlessId ? `https://limitless.exchange/advanced/markets/${limitlessId}` : '#';
       default:
         return '#';
     }

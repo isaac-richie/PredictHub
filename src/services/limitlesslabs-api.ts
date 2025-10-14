@@ -38,7 +38,7 @@ function normalizeMarket(raw: any): PredictionMarket {
     volume: volumeNum,
     liquidity: liquidityNum,
     totalVolume: volumeNum,
-    externalUrl: raw.slug ? `https://limitless.exchange/market/${raw.slug}` : undefined,
+    externalUrl: raw.id ? `https://limitless.exchange/advanced/markets/${raw.id}` : undefined,
     slug: raw.slug,
     volumeNum,
     liquidityNum,
