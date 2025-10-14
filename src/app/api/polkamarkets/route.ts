@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Configure for Vercel serverless
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 // NOTE: Polkamarkets doesn't have a public REST API
 // We're using a combination of on-chain data and realistic market data
 // In production, you would:

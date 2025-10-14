@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 
+// Configure for Vercel serverless
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const endpoint = searchParams.get('endpoint') || 'markets';

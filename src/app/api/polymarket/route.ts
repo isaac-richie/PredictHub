@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Configure for Vercel serverless
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 60 seconds max for API routes
+
 const POLYMARKET_BASE_URL = 'https://gamma-api.polymarket.com';
 
 // Handle price history requests with real Polymarket trades data

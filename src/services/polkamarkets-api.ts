@@ -29,14 +29,8 @@ export interface PolkamarketsMarket {
 
 export class PolkamarketsApiService {
   private apiClient;
-  private isBuildTime: boolean;
 
   constructor(apiKey?: string) {
-    // Detect if we're in build time to avoid ECONNREFUSED errors
-    this.isBuildTime = typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build';
-    
-    console.log(`🔍 PolkamarketsAPI: Initializing, isBuildTime: ${this.isBuildTime}`);
-    
     // For now, we'll use a mock approach since Polkamarkets doesn't seem to have a public REST API
     // In the future, this could be updated to use their SDK or any discovered endpoints
     this.apiClient = createApiClient(
@@ -55,27 +49,15 @@ export class PolkamarketsApiService {
     try {
       console.log('🔍 PolkamarketsAPI: Fetching active markets, limit:', limit, 'offset:', offset);
       
-      // During build time, return empty array to avoid ECONNREFUSED errors
-      // Markets will be fetched dynamically at runtime
-      if (this.isBuildTime) {
-        console.log('🔍 PolkamarketsAPI: Build time detected, returning empty array');
-        return [];
-      }
-      
       // Fetch from our enhanced Polkamarkets API route with 200 markets
-      const response = await fetch(`http://localhost:3000/api/polkamarkets?endpoint=markets&limit=${limit}&offset=${offset}`);
+      const markets = await this.apiClient.get<any[]>('', {
+        params: {
+          endpoint: 'markets',
+          limit,
+          offset,
+        },
+      });
       
-      if (!response.ok) {
-        console.error('🔍 PolkamarketsAPI: Failed to fetch markets, using fallback');
-        // Fallback to old mock data if API fails
-        const mockMarkets = this.getMockMarkets();
-        const transformedMarkets = mockMarkets
-          .map(market => this.transformMarketData(market))
-          .filter(Boolean) as PredictionMarket[];
-        return transformedMarkets;
-      }
-      
-      const markets = await response.json();
       console.log('🔍 PolkamarketsAPI: Fetched markets from API, count:', markets.length);
       
       // Transform the API data to match PredictionMarket format

@@ -21,11 +21,7 @@ export class AggregationService {
         platform.api.getActiveMarkets(Math.ceil(limit / this.platforms.length))
           .catch(error => {
             console.error(`Error fetching markets from ${platform.name}:`, error);
-            // During build time, return empty array instead of throwing
-            if (error.message && error.message.includes('ECONNREFUSED')) {
-              console.log(`🔍 Build time detected - returning empty markets for ${platform.name}`);
-              return [];
-            }
+            // Return empty array on any error to prevent total failure
             return [];
           })
       );

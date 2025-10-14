@@ -6,15 +6,9 @@ export class PolymarketApiService {
   private apiClient;
 
   constructor(apiKey?: string) {
-    // During build time (SSG), use direct API calls to avoid ECONNREFUSED errors
-    // In runtime, use Next.js API proxy route for rate limiting and error handling
-    const isBuildTime = typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build';
-    const baseUrl = isBuildTime ? 'https://gamma-api.polymarket.com' : '/api/polymarket';
-    
-    console.log(`🔍 PolymarketAPI: Initializing with baseUrl: ${baseUrl}, isBuildTime: ${isBuildTime}`);
-    
+    // Always use Next.js API proxy route for consistency
     this.apiClient = createApiClient(
-      baseUrl,
+      '/api/polymarket',
       {
         apiKey,
         requestsPerMinute: 60,
@@ -29,18 +23,8 @@ export class PolymarketApiService {
     try {
       console.log('🔍 PolymarketAPI: Fetching active markets, limit:', limit, 'offset:', offset);
       
-      // Check if we're using direct API (build time) or proxy (runtime)
-      const isBuildTime = typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build';
-      
-      const response = await this.apiClient.get<PolymarketMarket[]>(isBuildTime ? '/markets' : '', {
-        params: isBuildTime ? {
-          // Direct API parameters
-          limit,
-          offset,
-          closed: 'false',
-          active: 'true',
-        } : {
-          // Proxy API parameters
+      const response = await this.apiClient.get<PolymarketMarket[]>('', {
+        params: {
           endpoint: 'markets',
           limit,
           offset,

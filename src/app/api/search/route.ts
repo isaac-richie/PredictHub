@@ -1,4 +1,12 @@
 import { NextResponse } from 'next/server';
+import { polymarketApi } from '@/services/polymarket-api';
+import { polkamarketsApi } from '@/services/polkamarkets-api';
+import { limitlessApi } from '@/services/limitlesslabs-api';
+
+// Configure for Vercel serverless
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,121 +24,89 @@ export async function GET(request: Request) {
     const searchQuery = query.toLowerCase().trim();
     let allResults: any[] = [];
 
-    // Search Polymarket
-    try {
-      const polymarketResponse = await fetch(
-        `http://localhost:3000/api/polymarket?endpoint=markets&limit=200&offset=0&order=created_at&ascending=false&closed=false&active=true`
-      );
-      
-      if (polymarketResponse.ok) {
-        const polymarketData = await polymarketResponse.json();
-        const polymarketResults = polymarketData
-          .filter((market: any) => {
+    // Search all platforms in parallel using service layer
+    const searchPromises = [
+      // Search Polymarket
+      polymarketApi.getActiveMarkets(200, 0)
+        .then(markets => {
+          const results = markets.filter(market => {
             const title = (market.title || market.question || '').toLowerCase();
             const description = (market.description || '').toLowerCase();
             const category = (market.category || '').toLowerCase();
             return title.includes(searchQuery) || 
                    description.includes(searchQuery) || 
                    category.includes(searchQuery);
-          })
-          .map((market: any) => ({
-            ...market,
-            platform: 'polymarket'
-          }));
-        
-        allResults = [...allResults, ...polymarketResults];
-        console.log(`🔍 Search API: Found ${polymarketResults.length} Polymarket results`);
-      }
-    } catch (error) {
-      console.error('🔍 Search API: Error searching Polymarket:', error);
-    }
+          });
+          console.log(`🔍 Search API: Found ${results.length} Polymarket results`);
+          return results;
+        })
+        .catch(error => {
+          console.error('🔍 Search API: Error searching Polymarket:', error);
+          return [];
+        }),
 
-    // Search Polkamarkets
-    try {
-      const polkamarketsResponse = await fetch(
-        `http://localhost:3000/api/polkamarkets?endpoint=markets&limit=200&offset=0`
-      );
-      
-      if (polkamarketsResponse.ok) {
-        const polkamarketsData = await polkamarketsResponse.json();
-        const polkamarketsResults = polkamarketsData
-          .filter((market: any) => {
+      // Search Polkamarkets
+      polkamarketsApi.getActiveMarkets(200, 0)
+        .then(markets => {
+          const results = markets.filter(market => {
             const title = (market.title || market.question || '').toLowerCase();
             const description = (market.description || '').toLowerCase();
             const category = (market.category || '').toLowerCase();
             return title.includes(searchQuery) || 
                    description.includes(searchQuery) || 
                    category.includes(searchQuery);
-          })
-          .map((market: any) => ({
-            ...market,
-            platform: 'polkamarkets'
-          }));
-        
-        allResults = [...allResults, ...polkamarketsResults];
-        console.log(`🔍 Search API: Found ${polkamarketsResults.length} Polkamarkets results`);
-      }
-    } catch (error) {
-      console.error('🔍 Search API: Error searching Polkamarkets:', error);
-    }
+          });
+          console.log(`🔍 Search API: Found ${results.length} Polkamarkets results`);
+          return results;
+        })
+        .catch(error => {
+          console.error('🔍 Search API: Error searching Polkamarkets:', error);
+          return [];
+        }),
 
-    // Search LimitlessLabs
-    try {
-      const limitlessResponse = await fetch(
-        `http://localhost:3000/api/limitlesslabs?endpoint=markets&limit=25&offset=0`
-      );
-      
-      if (limitlessResponse.ok) {
-        const limitlessData = await limitlessResponse.json();
-        const limitlessResults = limitlessData
-          .filter((market: any) => {
+      // Search LimitlessLabs
+      limitlessApi.getActiveMarkets(25, 0)
+        .then(markets => {
+          const results = markets.filter(market => {
             const title = (market.title || market.question || '').toLowerCase();
             const description = (market.description || '').toLowerCase();
             const category = (market.category || '').toLowerCase();
             return title.includes(searchQuery) || 
                    description.includes(searchQuery) || 
                    category.includes(searchQuery);
-          })
-          .map((market: any) => ({
-            ...market,
-            platform: 'limitlesslabs'
-          }));
-        
-        allResults = [...allResults, ...limitlessResults];
-        console.log(`🔍 Search API: Found ${limitlessResults.length} LimitlessLabs results`);
-      }
-    } catch (error) {
-      console.error('🔍 Search API: Error searching LimitlessLabs:', error);
-    }
+          });
+          console.log(`🔍 Search API: Found ${results.length} LimitlessLabs results`);
+          return results;
+        })
+        .catch(error => {
+          console.error('🔍 Search API: Error searching LimitlessLabs:', error);
+          return [];
+        })
+    ];
 
-    // Sort by relevance (exact matches first, then by volume)
-    const sortedResults = allResults.sort((a, b) => {
-      const aTitle = (a.title || a.question || '').toLowerCase();
-      const bTitle = (b.title || b.question || '').toLowerCase();
+    const results = await Promise.all(searchPromises);
+    allResults = results.flat();
+
+    // Sort by relevance (exact matches first, then partial matches)
+    // Then by volume for ties
+    allResults = allResults.sort((a, b) => {
+      const aTitleExact = (a.title || a.question || '').toLowerCase() === searchQuery;
+      const bTitleExact = (b.title || b.question || '').toLowerCase() === searchQuery;
       
-      // Exact matches first
-      const aExact = aTitle === searchQuery ? 1 : 0;
-      const bExact = bTitle === searchQuery ? 1 : 0;
+      if (aTitleExact && !bTitleExact) return -1;
+      if (!aTitleExact && bTitleExact) return 1;
       
-      if (aExact !== bExact) return bExact - aExact;
-      
-      // Then by title starts with query
-      const aStarts = aTitle.startsWith(searchQuery) ? 1 : 0;
-      const bStarts = bTitle.startsWith(searchQuery) ? 1 : 0;
-      
-      if (aStarts !== bStarts) return bStarts - aStarts;
-      
-      // Finally by volume
-      return (b.volumeNum || b.totalVolume || 0) - (a.volumeNum || a.totalVolume || 0);
+      // If both exact or both not exact, sort by volume
+      return (b.totalVolume || 0) - (a.totalVolume || 0);
     });
 
-    const limitedResults = sortedResults.slice(0, limit);
-    
-    console.log(`🔍 Search API: Returning ${limitedResults.length} total results`);
-    return NextResponse.json(limitedResults);
+    // Limit results
+    allResults = allResults.slice(0, limit);
+
+    console.log(`🔍 Search API: Total results: ${allResults.length}`);
+    return NextResponse.json(allResults);
   } catch (error: any) {
-    console.error('🔍 Search API: Error:', error);
+    console.error('Error in Search API:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
-
