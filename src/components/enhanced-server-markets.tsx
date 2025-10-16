@@ -378,7 +378,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
 
                 {/* Market Previews (2 compact rows) */}
                 <div className="space-y-2 mb-4">
-                  {platformMarkets.slice(0, 2).map((market, index) => (
+                  {platformMarkets.slice(0, 2).map((market) => (
                     <div 
                       key={market.id} 
                       onClick={() => handleMarketClick(market)}

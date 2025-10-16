@@ -160,7 +160,7 @@ export const limitlessApi = {
       const res = await fetch(`${BASE_URL}/markets/stats`, { next: { revalidate: 60 } });
       const data = await safeJson(res);
       return data || { totalMarkets: 0 };
-    } catch (e) {
+    } catch {
       return { totalMarkets: 0 };
     }
   }

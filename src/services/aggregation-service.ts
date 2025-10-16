@@ -195,7 +195,7 @@ export class AggregationService {
         try {
           const market = await platform.api.getMarketById(marketId);
           if (market) return market;
-        } catch (error) {
+        } catch {
           // Continue to next platform
         }
       }
@@ -275,7 +275,7 @@ export class AggregationService {
           status: 'healthy' as const,
           lastUpdate: new Date(),
         };
-      } catch (error) {
+      } catch {
         return {
           platform: platform.name,
           status: 'down' as const,

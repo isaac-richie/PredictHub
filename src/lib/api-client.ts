@@ -18,10 +18,26 @@ export class ApiClient {
     } = {}
   ) {
     // Handle server-side requests by using absolute URLs
+    // In production (Vercel), use the deployed URL, otherwise use localhost
+    const isProduction = process.env.NODE_ENV === 'production';
     const port = process.env.PORT || '3000';
-    const fullBaseUrl = baseUrl.startsWith('http') 
-      ? baseUrl 
-      : `http://localhost:${port}${baseUrl}`;
+    
+    let fullBaseUrl: string;
+    if (baseUrl.startsWith('http')) {
+      fullBaseUrl = baseUrl;
+    } else if (isProduction) {
+      // Use the deployed URL for production
+      const deployedUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+      if (deployedUrl) {
+        fullBaseUrl = `https://${deployedUrl}${baseUrl}`;
+      } else {
+        // Fallback for production without VERCEL_URL
+        fullBaseUrl = `https://predicthub.vercel.app${baseUrl}`;
+      }
+    } else {
+      // Development
+      fullBaseUrl = `http://localhost:${port}${baseUrl}`;
+    }
     
     this.instance = axios.create({
       baseURL: fullBaseUrl,

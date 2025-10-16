@@ -30,10 +30,6 @@ export function SimpleMarketCard({ market, onClick }: SimpleMarketCardProps) {
   };
 
 
-  const formatPriceUSD = (num: number) => {
-    if (typeof num !== 'number' || isNaN(num)) return '$0.00';
-    return '$' + (num * 100).toFixed(2);
-  };
 
   const getStatusColor = (active: boolean) => {
     return active 

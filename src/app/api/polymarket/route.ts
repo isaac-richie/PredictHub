@@ -242,7 +242,7 @@ function processClobDataToChartData(history: any[], timeRange: string) {
   console.log('🔍 Processing CLOB data:', history.length, 'data points');
   
   // CLOB data format: [{"t": timestamp, "p": price}]
-  const chartData = history.map((point, index) => ({
+  const chartData = history.map((point) => ({
     timestamp: point.t * 1000, // Convert to milliseconds
     date: new Date(point.t * 1000).toISOString(),
     price: point.p,
@@ -356,7 +356,7 @@ function processTradesToChartData(trades: any[], timeRange: string) {
 */
 
 // Debug function to test API connectivity and data accuracy
-async function handleDebugPriceHistory(marketId: string, searchParams: URLSearchParams) {
+async function handleDebugPriceHistory(marketId: string) {
   try {
     const conditionId = marketId.replace(/^polymarket_/, '');
     
@@ -422,7 +422,7 @@ async function handleDebugPriceHistory(marketId: string, searchParams: URLSearch
 }
 
 // Handle detailed market data requests
-async function handleMarketDetails(marketId: string, searchParams: URLSearchParams) {
+async function handleMarketDetails(marketId: string) {
   try {
     console.log('🔍 Market Details: Fetching comprehensive data for market:', marketId);
     
@@ -617,12 +617,12 @@ export async function GET(request: NextRequest) {
     
     // Debug endpoint to test API connectivity
     if (endpoint === 'debug-price-history' && marketId) {
-      return handleDebugPriceHistory(marketId, searchParams);
+      return handleDebugPriceHistory(marketId);
     }
     
     // Handle detailed market data requests
     if (endpoint === 'market-details' && marketId) {
-      return handleMarketDetails(marketId, searchParams);
+      return handleMarketDetails(marketId);
     }
     
     // Use events endpoint for recent markets, markets for other requests

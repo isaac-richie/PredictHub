@@ -265,11 +265,6 @@ export function ProfessionalChart({ data, market, selectedTimeRange, onTimeRange
     return price.toFixed(4);
   };
 
-  const formatVolume = (vol: number) => {
-    if (vol >= 1000000) return `${(vol / 1000000).toFixed(1)}M`;
-    if (vol >= 1000) return `${(vol / 1000).toFixed(0)}K`;
-    return vol.toFixed(0);
-  };
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);

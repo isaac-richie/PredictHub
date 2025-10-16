@@ -2,6 +2,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import EnhancedServerMarkets from '@/components/enhanced-server-markets';
 import { aggregationService } from '@/services/aggregation-service';
 import Footer from './Footer';
+import { ClientWalletButton } from '@/components/client-wallet-button';
 
 async function getServerSideMarkets(limit: number = 300) {
   try {
@@ -46,6 +47,11 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <ErrorBoundary>
         <div className="flex-1">
+               {/* Wallet Button - Fixed Top Right */}
+               <div className="fixed top-6 right-6 lg:right-8 xl:right-12 z-50">
+                 <ClientWalletButton />
+               </div>
+               
                {/* Enhanced Header */}
                <div className="relative overflow-hidden">
                  {/* Background Gradient */}
@@ -57,17 +63,14 @@ export default async function Home() {
                    <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-cyan-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
                  </div>
                  
-                 <div className="relative container mx-auto px-4 py-16">
-                   <header className="text-center">
-                     {/* Logo and Brand */}
-                     <div className="mb-8">
-                               <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 rounded-3xl shadow-2xl mb-6 transform hover:scale-105 transition-transform duration-300">
-                         <div className="text-4xl font-bold text-white">P</div>
-                       </div>
-                       
-                       <h1 className="text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4 tracking-tight">
-                         PredictHub
-                       </h1>
+               <div className="relative container mx-auto px-4 py-16">
+                 
+                 <header className="text-center">
+                   {/* Logo and Brand */}
+                   <div className="mb-8">
+                      <h1 className="text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4 tracking-tight">
+                        PredictHub
+                      </h1>
                        
                        <div className="flex items-center justify-center space-x-2 mb-6">
                          <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>

@@ -98,7 +98,6 @@ export class PolymarketApiService {
       // Calculate total volumes
       const totalVolume24h = activeMarkets.reduce((sum, m) => sum + (m.volume24hr || 0), 0);
       const totalVolume7d = activeMarkets.reduce((sum, m) => sum + (m.volume1wk || 0), 0);
-      const totalVolume = activeMarkets.reduce((sum, m) => sum + (m.volumeNum || 0), 0);
       const averageLiquidity = activeMarkets.reduce((sum, m) => sum + (m.liquidityNum || 0), 0) / activeMarkets.length;
 
       return {
@@ -252,16 +251,13 @@ export class PolymarketApiService {
       
       console.log('🔍 TransformMarketData: Status determined as:', status);
 
-      // Parse outcomes and prices from JSON strings
-      let outcomes: string[] = [];
+      // Parse outcome prices from JSON strings
       let outcomePrices: number[] = [];
       
       try {
-        outcomes = JSON.parse(marketData.outcomes || '["Yes", "No"]');
         outcomePrices = JSON.parse(marketData.outcomePrices || '[0, 0]').map((p: string) => parseFloat(p));
       } catch (e) {
-        console.warn('Failed to parse outcomes or prices:', e);
-        outcomes = ['Yes', 'No'];
+        console.warn('Failed to parse prices:', e);
         outcomePrices = [0, 0];
       }
 

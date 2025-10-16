@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ExternalLink, TrendingUp, TrendingDown, Clock, DollarSign, Users, Activity, Info, BarChart3, Droplets, Calendar, Target } from 'lucide-react';
+import { X, ExternalLink, TrendingUp, TrendingDown, DollarSign, Activity, Info, BarChart3, Droplets, Calendar, Target } from 'lucide-react';
 import { ProfessionalChart } from './professional-chart';
+import { ChainNotification } from './chain-notification';
+import { base, polygon } from 'viem/chains';
 
 interface ProductionMarketModalProps {
   market: any | null;
@@ -178,6 +180,26 @@ export function ProductionMarketModal({ market, isOpen, onClose }: ProductionMar
 
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-120px)] pb-16">
+          {/* Chain Notification */}
+          <div className="px-6 pt-6">
+            <ChainNotification
+              requiredChainId={
+                market.platform === 'polymarket' || market.platform === 'polkamarkets'
+                  ? polygon.id
+                  : base.id
+              }
+              platformName={
+                market.platform === 'polymarket'
+                  ? 'Polymarket'
+                  : market.platform === 'polkamarkets'
+                  ? 'Polkamarkets'
+                  : market.platform === 'limitlesslabs'
+                  ? 'LimitlessLabs'
+                  : market.platform
+              }
+            />
+          </div>
+          
           {/* Price Cards */}
           <div className="px-6 py-6 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
