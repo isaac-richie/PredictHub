@@ -69,7 +69,7 @@ export function SimpleMarketCard({ market, onClick }: SimpleMarketCardProps) {
   const getPlatformLogo = (platform: string) => {
     const key = (platform || '').toLowerCase();
     if (key === 'polymarket') return '/logos/id98Ai2eTk_logos.jpeg';
-    if (key === 'polkamarkets') return '/logos/PM4n0IL9_400x400-removebg-preview.png';
+    if (key === 'polkamarkets') return '/logos/myriad.jpeg';
     if (key === 'limitlesslabs') return '';
     return '';
   };

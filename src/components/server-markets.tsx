@@ -269,7 +269,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
               K
             </span>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Polkamarkets</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Myriad</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {markets.filter(m => m.platform === 'polkamarkets').length} markets
               </p>
@@ -376,7 +376,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {selectedPlatform === 'all' ? 'Featured Markets' : 
              selectedPlatform === 'polymarket' ? 'Polymarket Markets' :
-             selectedPlatform === 'polkamarkets' ? 'Polkamarkets Markets' :
+             selectedPlatform === 'polkamarkets' ? 'Myriad Markets' :
              selectedPlatform === 'omen' ? 'Omen Markets' :
              selectedPlatform === 'zeitgeist' ? 'Zeitgeist Markets' : 'Featured Markets'}
           </h2>
@@ -385,7 +385,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
             {selectedPlatform !== 'all' && (
               <span className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs">
                 {selectedPlatform === 'polymarket' ? 'Polymarket' :
-                 selectedPlatform === 'polkamarkets' ? 'Polkamarkets' :
+                 selectedPlatform === 'polkamarkets' ? 'Myriad' :
                  selectedPlatform === 'omen' ? 'Omen' :
                  selectedPlatform === 'zeitgeist' ? 'Zeitgeist' : selectedPlatform}
               </span>

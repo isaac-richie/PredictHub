@@ -66,9 +66,15 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
   const noCents = (noPrice * 100).toFixed(1) + '¢';
 
   const formatVolume = (vol: number) => {
-    if (vol >= 1000000) return `$${(vol / 1000000).toFixed(2)}M`;
-    if (vol >= 1000) return `$${(vol / 1000).toFixed(0)}K`;
-    return `$${vol.toFixed(0)}`;
+    if (vol >= 1000000000) {
+      return `$${(vol / 1000000000).toFixed(1)}B`;
+    } else if (vol >= 1000000) {
+      return `$${(vol / 1000000).toFixed(1)}M`;
+    } else if (vol >= 1000) {
+      return `$${(vol / 1000).toFixed(0)}K`;
+    } else {
+      return `$${vol.toFixed(0)}`;
+    }
   };
 
   const formatDate = (dateString: string | Date) => {
@@ -519,7 +525,7 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
                   <span>Trade on {
                     market.platform === 'polymarket' ? 'Polymarket' : 
                     String(market.platform).toLowerCase().includes('limitless') ? 'Limitless' : 
-                    'Polkamarkets'
+                    'Myriad'
                   }</span>
                   <ExternalLink className="w-4 h-4" />
                 </div>

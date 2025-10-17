@@ -15,11 +15,16 @@ function normalizeMarket(raw: any): PredictionMarket {
   const yesPrice = yesPct > 1 ? yesPct / 100 : yesPct;
   const noPrice = noPct > 1 ? noPct / 100 : noPct;
 
-  // Formatted values appear to be in thousands (e.g., 164.109293 => 164.1K)
-  const volumeNum = toNumber(raw.volumeFormatted) * 1000 || toNumber(raw.volume);
-  const liquidityNum = toNumber(raw.liquidityFormatted) * 1000 || toNumber(raw.liquidity);
-  const openInterestNum = toNumber(raw.openInterestFormatted) * 1000 || toNumber(raw.openInterest);
+  // Use raw volume/liquidity values directly - they're already in the correct units
+  // volumeFormatted and liquidityFormatted are in thousands for display, but raw values are correct
+  const volumeNum = toNumber(raw.volume);
+  const liquidityNum = toNumber(raw.liquidity);
+  const openInterestNum = toNumber(raw.openInterest);
 
+  // Extract the actual market ID for URL construction
+  // Limitless uses a specific ID format in their URLs
+  const marketId = raw.id || raw.slug || raw.marketId;
+  
   return {
     id: `limitlesslabs_${raw.id ?? raw.slug ?? Math.random().toString(36).slice(2)}`,
     platform: 'limitlesslabs',
@@ -38,7 +43,8 @@ function normalizeMarket(raw: any): PredictionMarket {
     volume: volumeNum,
     liquidity: liquidityNum,
     totalVolume: volumeNum,
-    externalUrl: raw.id ? `https://limitless.exchange/advanced/markets/${raw.id}` : undefined,
+    // Override any externalUrl from the API with our correct format
+    externalUrl: marketId ? `https://limitless.exchange/advanced/markets/${marketId}` : undefined,
     slug: raw.slug,
     volumeNum,
     liquidityNum,

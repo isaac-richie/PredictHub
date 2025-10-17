@@ -248,7 +248,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
 
   const getPlatformName = () => {
     return platform === 'polymarket' ? 'Polymarket' : 
-           platform === 'polkamarkets' ? 'Polkamarkets' : 
+           platform === 'polkamarkets' ? 'Myriad' : 
            'Limitless';
   };
 
@@ -414,7 +414,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
               {platform === 'polymarket' ? (
                 <img src="/logos/id98Ai2eTk_logos.jpeg" alt="Polymarket logo" className="w-10 h-10 object-contain" />
               ) : platform === 'polkamarkets' ? (
-                <img src="/logos/PM4n0IL9_400x400-removebg-preview.png" alt="Polkamarkets logo" className="w-10 h-10 object-contain" />
+                <img src="/logos/myriad.jpeg" alt="Myriad logo" className="w-10 h-10 object-contain" />
               ) : (
                 <img src="/logos/limitlesslabs.svg" alt="Limitless logo" className="w-10 h-10 object-contain" />
               )}
@@ -511,7 +511,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
           </div>
           <div className="flex items-center space-x-2">
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${getPlatformColor()} text-white`}>
-              {platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'}
+              {platform === 'polymarket' ? 'Polymarket' : 'Myriad'}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {loading ? 'Loading...' : `${filteredMarkets.length} markets`}

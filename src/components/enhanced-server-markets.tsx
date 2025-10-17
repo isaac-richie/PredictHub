@@ -146,7 +146,25 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
     return markets.filter(m => m.platform === platform);
   };
 
+  // Proper number formatting function
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000000) {
+      return `$${(num / 1000000000).toFixed(1)}B`;
+    } else if (num >= 1000000) {
+      return `$${(num / 1000000).toFixed(1)}M`;
+    } else if (num >= 1000) {
+      return `$${(num / 1000).toFixed(0)}K`;
+    } else {
+      return `$${num.toFixed(0)}`;
+    }
+  };
+
   const getPlatformStats = (platform: string) => {
+    // Handle coming soon platforms
+    if (platform === 'kalshi') {
+      return { activeCount: 0, totalVolume: 0, totalMarkets: 0, comingSoon: true };
+    }
+    
     const platformMarkets = getPlatformMarkets(platform);
     const activeCount = platformMarkets.filter(m => m.active).length;
     const totalVolume = platformMarkets.reduce((sum, m) => sum + (m.totalVolume || 0), 0);
@@ -182,9 +200,9 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
     },
     {
       id: 'polkamarkets',
-      name: 'Polkamarkets',
+      name: 'Myriad',
       icon: undefined,
-      logo: '/logos/PM4n0IL9_400x400-removebg-preview.png',
+      logo: '/logos/myriad.jpeg',
       gradient: 'from-purple-600 via-fuchsia-600 to-pink-600',
       hoverGradient: 'from-purple-500 via-fuchsia-500 to-pink-500',
       bgGradient: 'from-purple-50 via-fuchsia-50 to-pink-50',
@@ -205,13 +223,27 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
       borderColor: 'border-cyan-400 dark:border-cyan-500',
       hoverBorderColor: 'hover:border-cyan-300 dark:hover:border-cyan-600',
       shadowColor: 'shadow-cyan-500/20'
+    },
+    {
+      id: 'kalshi',
+      name: 'Kalshi',
+      icon: 'K',
+      logo: undefined,
+      gradient: 'from-green-600 via-emerald-600 to-teal-600',
+      hoverGradient: 'from-green-500 via-emerald-500 to-teal-500',
+      bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
+      darkBgGradient: 'from-green-900/30 via-emerald-900/20 to-teal-900/30',
+      borderColor: 'border-green-400 dark:border-green-500',
+      hoverBorderColor: 'hover:border-green-300 dark:hover:border-green-600',
+      shadowColor: 'shadow-green-500/20',
+      comingSoon: true
     }
   ];
 
   const getPlatformLogo = (platformId: string) => {
     const id = (platformId || '').toLowerCase();
     if (id === 'polymarket') return '/logos/id98Ai2eTk_logos.jpeg';
-    if (id === 'polkamarkets') return '/logos/PM4n0IL9_400x400-removebg-preview.png';
+    if (id === 'polkamarkets') return '/logos/myriad.jpeg';
     if (id === 'limitlesslabs') return '';
     return '';
   };
@@ -363,22 +395,45 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                       {platform.name}
                     </h3>
                     <div className="flex items-center gap-3 text-xs">
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">
-                        {stats.totalMarkets} markets
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                        <span className="text-green-600 dark:text-green-400 font-medium">
-                          {stats.activeCount} live
+                      {stats.comingSoon ? (
+                        <span className="font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full text-xs">
+                          Coming Soon
                         </span>
-                      </div>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                            {stats.totalMarkets} markets
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            <span className="text-green-600 dark:text-green-400 font-medium">
+                              {stats.activeCount} live
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Market Previews (2 compact rows) */}
                 <div className="space-y-2 mb-4">
-                  {platformMarkets.slice(0, 2).map((market) => (
+                  {stats.comingSoon ? (
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="text-center">
+                        <div className="w-8 h-8 mx-auto mb-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">🚀</span>
+                        </div>
+                        <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">
+                          Markets Coming Soon
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Stay tuned for Kalshi integration
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    platformMarkets.slice(0, 2).map((market) => (
                     <div 
                       key={market.id} 
                       onClick={() => handleMarketClick(market)}
@@ -394,13 +449,13 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                               <div className="flex items-center gap-1">
                                 <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Vol:</span>
                                 <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                                  ${market.totalVolume ? (market.totalVolume / 1000).toFixed(0) + 'K' : '0'}
+                                  {formatNumber(market.totalVolume || 0)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Liq:</span>
                                 <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
-                                  ${market.liquidity ? (market.liquidity / 1000).toFixed(0) + 'K' : '0'}
+                                  {formatNumber(market.liquidity || 0)}
                                 </span>
                               </div>
                             </div>
@@ -415,11 +470,21 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
 
                 {/* Action Button (compact) */}
-                {platformMarkets.length > 2 && (
+                {stats.comingSoon ? (
+                  <button
+                    className="relative w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm cursor-not-allowed opacity-75"
+                    disabled
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <span>🚀 Coming Soon</span>
+                    </span>
+                  </button>
+                ) : platformMarkets.length > 2 ? (
                   <button
                     className={`relative w-full px-4 py-2.5 bg-gradient-to-r ${platform.gradient} hover:${platform.hoverGradient} text-white font-semibold rounded-lg transition-colors text-sm`}
                     onClick={(e) => {
@@ -434,7 +499,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                       </span>
                     </span>
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           );
@@ -449,7 +514,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {selectedPlatform === 'all' ? 'All Markets' : 
              selectedPlatform === 'polymarket' ? 'Polymarket' :
-             selectedPlatform === 'polkamarkets' ? 'Polkamarkets' : 'Omen'}
+             selectedPlatform === 'polkamarkets' ? 'Myriad' : 'Omen'}
           </h2>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -496,13 +561,13 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                 <div className="text-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Volume</div>
                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                    ${market.totalVolume ? (market.totalVolume / 1000).toFixed(0) + 'K' : '0'}
+                    {formatNumber(market.totalVolume || 0)}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Liquidity</div>
                   <div className="text-sm font-bold text-purple-600 dark:text-purple-400">
-                    ${market.liquidity ? (market.liquidity / 1000).toFixed(0) + 'K' : '0'}
+                    {formatNumber(market.liquidity || 0)}
                   </div>
                 </div>
               </div>

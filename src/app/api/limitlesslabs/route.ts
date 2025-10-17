@@ -19,12 +19,20 @@ export async function GET(request: Request) {
       const maxLimit = Math.min(limit, 25);
       const response = await fetch(
         `https://api.limitless.exchange/markets/active?page=1&limit=${maxLimit}`,
-        { next: { revalidate: 60 } }
+        { 
+          next: { revalidate: 60 },
+          headers: {
+            'User-Agent': 'PredictHub/1.0',
+            'Accept': 'application/json',
+          }
+        }
       );
 
       if (!response.ok) {
         console.error(`❌ LimitlessLabs API: Failed to fetch markets, status: ${response.status}`);
-        return NextResponse.json([]);
+        const errorResponse = NextResponse.json([]);
+        errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+        return errorResponse;
       }
 
       const data = await response.json();
@@ -68,20 +76,28 @@ export async function GET(request: Request) {
           liquidity: liquidityNum,
           totalVolume: volumeNum,
           openInterest: openInterestNum,
-          externalUrl: market.slug ? `https://limitless.exchange/market/${market.slug}` : undefined,
+          externalUrl: market.slug ? `https://limitless.exchange/advanced/markets/${market.slug}` : undefined,
           slug: market.slug,
           volumeNum,
           liquidityNum,
         };
       });
 
-      return NextResponse.json(transformedMarkets);
+      const jsonResponse = NextResponse.json(transformedMarkets);
+      jsonResponse.headers.set('Access-Control-Allow-Origin', '*');
+      jsonResponse.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      jsonResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+      return jsonResponse;
     }
 
-    return NextResponse.json([]);
+    const emptyResponse = NextResponse.json([]);
+    emptyResponse.headers.set('Access-Control-Allow-Origin', '*');
+    return emptyResponse;
   } catch (error: any) {
     console.error('❌ LimitlessLabs API Error:', error instanceof Error ? error.message : String(error));
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const errorResponse = NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+    return errorResponse;
   }
 }
 

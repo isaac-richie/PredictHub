@@ -146,7 +146,7 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-medium text-sm"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Trade on {market.platform === 'polymarket' ? 'Polymarket' : market.platform === 'limitlesslabs' ? 'LimitlessLabs' : 'Polkamarkets'}
+                Trade on {market.platform === 'polymarket' ? 'Polymarket' : market.platform === 'limitlesslabs' ? 'LimitlessLabs' : 'Myriad'}
               </a>
               
               <button
@@ -275,7 +275,7 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-2xl">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Ready to trade? Click to open this market on {market.platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'}
+                Ready to trade? Click to open this market on {market.platform === 'polymarket' ? 'Polymarket' : 'Myriad'}
               </div>
               <a
                 href={tradingUrl}
@@ -284,7 +284,7 @@ export function MarketDetailModal({ market, isOpen, onClose }: MarketDetailModal
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-medium"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                Open on {market.platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'}
+                Open on {market.platform === 'polymarket' ? 'Polymarket' : 'Myriad'}
               </a>
             </div>
           </div>

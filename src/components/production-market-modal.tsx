@@ -192,7 +192,7 @@ export function ProductionMarketModal({ market, isOpen, onClose }: ProductionMar
                 market.platform === 'polymarket'
                   ? 'Polymarket'
                   : market.platform === 'polkamarkets'
-                  ? 'Polkamarkets'
+                  ? 'Myriad'
                   : market.platform === 'limitlesslabs'
                   ? 'LimitlessLabs'
                   : market.platform
