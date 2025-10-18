@@ -18,26 +18,43 @@ export class ApiClient {
     } = {}
   ) {
     // Handle server-side requests by using absolute URLs
-    // In production (Vercel), use the deployed URL, otherwise use localhost
+    const isServer = typeof window === 'undefined';
     const isProduction = process.env.NODE_ENV === 'production';
     const port = process.env.PORT || '3000';
     
     let fullBaseUrl: string;
     if (baseUrl.startsWith('http')) {
+      // Already an absolute URL (external API)
       fullBaseUrl = baseUrl;
-    } else if (isProduction) {
-      // Use the deployed URL for production
-      const deployedUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
-      if (deployedUrl) {
-        fullBaseUrl = `https://${deployedUrl}${baseUrl}`;
+    } else if (isServer) {
+      // Server-side: need absolute URL for internal API routes
+      if (isProduction) {
+        // Production: Use Vercel URL
+        const deployedUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+        if (deployedUrl) {
+          // VERCEL_URL doesn't include protocol
+          fullBaseUrl = `https://${deployedUrl}${baseUrl}`;
+        } else {
+          // Fallback: use your production domain
+          fullBaseUrl = `https://predict-hub-mbcm.vercel.app${baseUrl}`;
+        }
       } else {
-        // Fallback for production without VERCEL_URL
-        fullBaseUrl = `https://predicthub.vercel.app${baseUrl}`;
+        // Development server-side
+        fullBaseUrl = `http://localhost:${port}${baseUrl}`;
       }
     } else {
-      // Development
-      fullBaseUrl = `http://localhost:${port}${baseUrl}`;
+      // Client-side: use relative URL (browser handles it)
+      fullBaseUrl = baseUrl;
     }
+    
+    console.log('🔍 ApiClient initialized:', {
+      originalBaseUrl: baseUrl,
+      fullBaseUrl,
+      isServer,
+      isProduction,
+      vercelUrl: process.env.VERCEL_URL,
+      publicVercelUrl: process.env.NEXT_PUBLIC_VERCEL_URL
+    });
     
     this.instance = axios.create({
       baseURL: fullBaseUrl,
@@ -50,7 +67,7 @@ export class ApiClient {
 
     // Request interceptor for rate limiting
     this.instance.interceptors.request.use(async (config) => {
-      console.log('🔍 ApiClient: Making request to:', config.url, 'with params:', config.params);
+      console.log('🔍 ApiClient: Making request to:', config.baseURL, config.url, 'with params:', config.params);
       // Temporarily disable rate limiting for debugging
       // await this.enforceRateLimit();
       return config;

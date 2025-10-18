@@ -260,10 +260,10 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
   return (
     <div className="w-full space-y-8">
       {/* Search (UI only) */}
-      <div className="container mx-auto">
-        <div className="relative max-w-3xl">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search className="h-4 w-4 text-gray-400" />
+      <div className="container mx-auto px-4">
+        <div className="relative max-w-3xl mx-auto">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+            <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
           </div>
           <input
             type="text"
@@ -271,15 +271,15 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
             placeholder="Search markets, categories, or platforms"
             value={searchQuery}
             onChange={handleSearchChange}
-            className="block w-full rounded-xl border border-gray-200 bg-white/90 pl-9 pr-10 py-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800/80 dark:text-white dark:placeholder:text-gray-500"
+            className="block w-full rounded-xl border border-gray-200 bg-white/90 pl-9 sm:pl-11 pr-10 sm:pr-12 py-3 sm:py-3.5 text-sm sm:text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800/80 dark:text-white dark:placeholder:text-gray-500"
           />
           {searchQuery && (
             <button
               onClick={handleClearSearch}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               aria-label="Clear search"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -308,7 +308,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
           </div>
 
           {isSearching ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 px-4">
               {Array.from({ length: 12 }).map((_, index) => (
                 <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 animate-pulse">
                   <div className="space-y-3">
@@ -319,7 +319,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
               ))}
             </div>
           ) : searchResults.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 px-4">
               {searchResults.map((market) => (
                 <SimpleMarketCard key={market.id} market={market} onClick={handleMarketClick} />
               ))}
@@ -342,7 +342,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
 
       {/* Platform Selection Grid (compact) - Hidden when searching */}
       {(!searchQuery || searchQuery.trim().length < 2) && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4">
         {platforms.map((platform) => {
           const stats = getPlatformStats(platform.id);
           const platformMarkets = getPlatformMarkets(platform.id);
@@ -530,7 +530,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
         </div>
 
         {/* Market Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 sm:gap-6 px-4">
           {getPlatformMarkets(selectedPlatform).slice(0, visibleCount).map((market) => (
             <div
               key={market.id}

@@ -309,10 +309,10 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-6xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-6xl bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col my-4 sm:my-0">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-start justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
               <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
@@ -324,10 +324,10 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
                 </span>
               )}
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">
               {market.title}
             </h2>
-            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center space-x-1">
                 <BarChart3 className="w-4 h-4" />
                 <span>{formatVolume(market.totalVolume || 0)} Vol.</span>
@@ -347,26 +347,27 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
         </div>
 
         {/* Tabs - Moved up right below header */}
-        <div className="border-b border-gray-200 dark:border-gray-800 px-6">
-          <div className="flex space-x-6">
+        <div className="border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 overflow-x-auto">
+          <div className="flex space-x-4 sm:space-x-6 min-w-max">
             {[
               { id: 'chart', label: 'Chart', icon: BarChart3 },
               { id: 'comments', label: 'Comments', icon: null },
-              { id: 'holders', label: 'Top Holders', icon: Users },
+              { id: 'holders', label: 'Holders', icon: Users },
               { id: 'activity', label: 'Activity', icon: TrendingUp }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-1 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
-                <div className="flex items-center space-x-2">
-                  {tab.icon && <tab.icon className="w-4 h-4" />}
-                  <span>{tab.label}</span>
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  {tab.icon && <tab.icon className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.id === 'holders' ? 'Hold' : tab.label}</span>
                 </div>
               </button>
             ))}
@@ -375,9 +376,9 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
 
         {/* Main Content - Two Column Layout */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
             {/* Left: Chart and Tab Content (2/3 width) */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Show chart only when Chart tab is active */}
               {activeTab === 'chart' && <PolymarketChart />}
 

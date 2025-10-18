@@ -48,7 +48,7 @@ export default async function Home() {
       <ErrorBoundary>
         <div className="flex-1">
                {/* Wallet Button - Fixed Top Right */}
-               <div className="fixed top-6 right-6 lg:right-8 xl:right-12 z-50">
+               <div className="fixed top-4 right-4 sm:top-6 sm:right-6 lg:right-8 xl:right-12 z-50">
                  <ClientWalletButton />
                </div>
                
@@ -63,12 +63,12 @@ export default async function Home() {
                    <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-cyan-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
                  </div>
                  
-               <div className="relative container mx-auto px-4 py-16">
+               <div className="relative container mx-auto px-4 py-12 sm:py-16">
                  
                  <header className="text-center">
                    {/* Logo and Brand */}
-                   <div className="mb-8">
-                      <h1 className="text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4 tracking-tight">
+                   <div className="mb-6 sm:mb-8">
+                      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4 tracking-tight">
                         PredictHub
                       </h1>
                        
@@ -78,55 +78,55 @@ export default async function Home() {
                          <div className="h-1 w-4 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"></div>
                        </div>
                        
-                       <p className="text-xl lg:text-2xl text-gray-700 dark:text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed">
+                       <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 dark:text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed px-4">
                          Your Gateway to the Future of Prediction Markets
                        </p>
                        
-                       <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto leading-relaxed">
+                       <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mt-3 sm:mt-4 max-w-2xl mx-auto leading-relaxed px-4">
                          Discover, analyze, and trade prediction markets across multiple platforms. 
                          Real-time data, smart insights, and seamless trading in one place.
                        </p>
                      </div>
                      
                      {/* Stats and Features */}
-                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 mb-8">
-                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                         <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-8 mb-6 sm:mb-8 px-4">
+                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 w-full sm:w-auto justify-center">
+                         <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse"></div>
+                         <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                            {serverMarkets?.length || 0} Active Markets
                          </span>
                        </div>
                        
-                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                         <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                         <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 w-full sm:w-auto justify-center">
+                         <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                         <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                            4+ Platforms
                          </span>
                        </div>
                        
-                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                         <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                         <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                       <div className="flex items-center space-x-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 w-full sm:w-auto justify-center">
+                         <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                         <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                            Real-time Data
                          </span>
                        </div>
                      </div>
                      
                      {/* Call to Action */}
-                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                               <button className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                         <span className="flex items-center space-x-2">
+                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4">
+                               <button className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                         <span className="flex items-center justify-center space-x-2">
                            <span>Explore Markets</span>
-                           <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                            </svg>
                          </span>
                        </button>
                        
-                       <button className="group px-8 py-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
-                         <span className="flex items-center space-x-2">
+                       <button className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-white font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+                         <span className="flex items-center justify-center space-x-2">
                            <span>Learn More</span>
-                           <svg className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                            </svg>
                          </span>
