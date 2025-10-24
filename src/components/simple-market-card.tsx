@@ -161,7 +161,10 @@ export function SimpleMarketCard({ market, onClick }: SimpleMarketCardProps) {
   return (
     <div 
       className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-300/30 dark:hover:border-blue-500/30 hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer"
-      onClick={() => onClick?.(market)}
+      onClick={() => {
+        console.log('🔍 SimpleMarketCard clicked:', market.title || market.question);
+        onClick?.(market);
+      }}
     >
       {/* Ultra-Compact Header */}
       <div className="flex items-center justify-between mb-2">

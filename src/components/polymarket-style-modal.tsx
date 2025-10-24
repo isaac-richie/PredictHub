@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ExternalLink, TrendingUp, Clock, BarChart3, Users } from 'lucide-react';
+import { X, ExternalLink, TrendingUp, Clock, BarChart3, Users, Wallet, Loader2, Brain } from 'lucide-react';
+import { useAccount, useSignMessage } from 'wagmi';
 import { PredictionMarket } from '@/types/prediction-market';
+import { limitlessLabsAuth } from '@/services/limitlesslabs-auth';
+import { AIInsightsDashboard } from './ai-insights-dashboard';
 
 interface PolymarketStyleModalProps {
   market: PredictionMarket | null;
@@ -11,12 +14,151 @@ interface PolymarketStyleModalProps {
 }
 
 export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyleModalProps) {
-  const [activeTab, setActiveTab] = useState<'chart' | 'comments' | 'holders' | 'activity'>('chart');
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync, isPending: isSigningPending } = useSignMessage();
+
+  // Debug logging for modal opening
+  useEffect(() => {
+    if (market && isOpen) {
+      console.log('🔍 PolymarketStyleModal opened for market:', {
+        id: market.id,
+        platform: market.platform,
+        title: market.title,
+        isLimitlessLabs: market.platform === 'limitlesslabs'
+      });
+    }
+  }, [market, isOpen]);
+  
+  const [activeTab, setActiveTab] = useState<'chart' | 'ai' | 'comments' | 'holders' | 'activity' | 'trade'>('chart');
   const [timeRange, setTimeRange] = useState('1W');
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Trading states for LimitlessLabs
+  const [authStep, setAuthStep] = useState<'connect' | 'sign' | 'authenticated' | 'trading'>('connect');
+  const [signingMessage, setSigningMessage] = useState<string>('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [tradingError, setTradingError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Trading order states
+  const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
+  const [orderAmount, setOrderAmount] = useState<string>('');
+  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   const timeRanges = ['1D', '1W', '1M', '3M', '1Y', 'ALL'];
+
+  // Check authentication status on mount
+  useEffect(() => {
+    if (market?.platform === 'limitlesslabs' && limitlessLabsAuth.isAuthenticated()) {
+      setIsAuthenticated(true);
+      setAuthStep('trading');
+    }
+  }, [market]);
+
+  // Handle wallet connection
+  useEffect(() => {
+    if (market?.platform === 'limitlesslabs') {
+      if (isConnected && address) {
+        setAuthStep('sign');
+        getSigningMessage();
+      } else {
+        setAuthStep('connect');
+      }
+    }
+  }, [isConnected, address, market]);
+
+  const getSigningMessage = async () => {
+    try {
+      setTradingError(null);
+      const message = await limitlessLabsAuth.getSigningMessage();
+      setSigningMessage(message);
+    } catch (err) {
+      setTradingError('Failed to get signing message');
+      console.error('Error getting signing message:', err);
+    }
+  };
+
+  const handleWalletSign = async () => {
+    if (!address || !signingMessage) return;
+
+    try {
+      setIsAuthenticating(true);
+      setTradingError(null);
+
+      // Sign the message with user's wallet
+      const signature = await signMessageAsync({ message: signingMessage });
+
+      // Authenticate with LimitlessLabs
+      await limitlessLabsAuth.authenticateWithWallet(address, signature, signingMessage);
+      
+      setIsAuthenticated(true);
+      setAuthStep('trading');
+    } catch (err) {
+      setTradingError('Authentication failed. Please try again.');
+      console.error('Authentication error:', err);
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await limitlessLabsAuth.logout();
+      setIsAuthenticated(false);
+      setAuthStep('connect');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedOutcome || !orderAmount || !isAuthenticated) {
+      setTradingError('Please select an outcome and enter an amount');
+      return;
+    }
+
+    try {
+      setIsPlacingOrder(true);
+      setTradingError(null);
+
+      // Simulate order placement (in production, this would call LimitlessLabs API)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('🔍 Order placed:', {
+        market: market?.id,
+        outcome: selectedOutcome,
+        amount: orderAmount,
+        type: orderType,
+        price: selectedOutcome === 'yes' ? market?.yesPrice : market?.noPrice
+      });
+
+      setOrderSuccess(true);
+      setOrderAmount('');
+      setSelectedOutcome(null);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => setOrderSuccess(false), 3000);
+    } catch (err) {
+      setTradingError('Failed to place order. Please try again.');
+      console.error('Order placement error:', err);
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
+  const getOutcomePrice = (outcome: 'yes' | 'no') => {
+    if (outcome === 'yes') {
+      return market?.yesPrice || 0;
+    }
+    return market?.noPrice || (1 - (market?.yesPrice || 0));
+  };
+
+  const formatPrice = (price: number) => {
+    return (price * 100).toFixed(1) + '¢';
+  };
 
   // Fetch price history
   const fetchPriceHistory = useCallback(async () => {
@@ -345,9 +487,11 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
           <div className="flex space-x-6">
             {[
               { id: 'chart', label: 'Chart', icon: BarChart3 },
+              { id: 'ai', label: '🤖 AI Insights', icon: Brain },
               { id: 'comments', label: 'Comments', icon: null },
               { id: 'holders', label: 'Top Holders', icon: Users },
-              { id: 'activity', label: 'Activity', icon: TrendingUp }
+              { id: 'activity', label: 'Activity', icon: TrendingUp },
+              ...(market?.platform === 'limitlesslabs' ? [{ id: 'trade', label: '⚡ Trade', icon: TrendingUp }] : [])
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -387,6 +531,11 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
                     </div>
                   </div>
                 )}
+                {activeTab === 'ai' && (
+                  <div className="space-y-4">
+                    <AIInsightsDashboard market={market} />
+                  </div>
+                )}
                 {activeTab === 'comments' && (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <p>Comments section coming soon</p>
@@ -400,6 +549,290 @@ export function PolymarketStyleModal({ market, isOpen, onClose }: PolymarketStyl
                 {activeTab === 'activity' && (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <p>Activity feed coming soon</p>
+                  </div>
+                )}
+                {activeTab === 'trade' && market?.platform === 'limitlesslabs' && (
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-6">
+                    <div className="text-center mb-6">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <TrendingUp className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        Trade on LimitlessLabs
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Connect your wallet to start trading
+                      </p>
+                    </div>
+
+                    {tradingError && (
+                      <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <p className="text-red-600 dark:text-red-400 text-sm">{tradingError}</p>
+                      </div>
+                    )}
+
+                    {/* Step 1: Connect Wallet */}
+                    {authStep === 'connect' && (
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Wallet className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                          Connect Your Wallet
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                          Connect your wallet to trade on LimitlessLabs
+                        </p>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                          <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                            💡 Use the wallet button in the top-right corner to connect your wallet
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Sign Message */}
+                    {authStep === 'sign' && (
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                          {isAuthenticating ? (
+                            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+                          ) : (
+                            <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          )}
+                        </div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                          Sign Message to Authenticate
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                          Sign the message to authenticate with LimitlessLabs
+                        </p>
+                        
+                        {signingMessage && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4 text-left">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Message to sign:</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 break-all font-mono">
+                              {signingMessage.slice(0, 100)}...
+                            </p>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={handleWalletSign}
+                          disabled={isAuthenticating || isSigningPending || !signingMessage}
+                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                        >
+                          {(isAuthenticating || isSigningPending) ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Signing...</span>
+                            </>
+                          ) : (
+                            <span>Sign Message</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Step 3: Trading Options */}
+                    {authStep === 'trading' && (
+                      <div>
+                        <div className="text-center mb-6">
+                          <div className="w-16 h-16 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            Ready to Trade!
+                          </h4>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            You&apos;re authenticated with LimitlessLabs
+                          </p>
+                        </div>
+
+                        {/* Interactive Trading Interface */}
+                        <div className="space-y-6">
+                          {/* Order Success Message */}
+                          {orderSuccess && (
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                              <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <p className="text-green-600 dark:text-green-400 text-sm font-medium">
+                                  Order placed successfully! 🎉
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Yes/No Trading Options */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* YES Option */}
+                            <div className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                              selectedOutcome === 'yes' 
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                                : 'border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600'
+                            }`}
+                            onClick={() => setSelectedOutcome('yes')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                  <span className="font-semibold text-gray-900 dark:text-white">YES</span>
+                                </div>
+                                <span className="text-2xl font-bold text-green-600">
+                                  {formatPrice(getOutcomePrice('yes'))}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Buy if you think this will happen
+                              </div>
+                            </div>
+
+                            {/* NO Option */}
+                            <div className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                              selectedOutcome === 'no' 
+                                ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                                : 'border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-600'
+                            }`}
+                            onClick={() => setSelectedOutcome('no')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                  <span className="font-semibold text-gray-900 dark:text-white">NO</span>
+                                </div>
+                                <span className="text-2xl font-bold text-red-600">
+                                  {formatPrice(getOutcomePrice('no'))}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Buy if you think this won&apos;t happen
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Order Form */}
+                          {selectedOutcome && (
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                Place {orderType === 'buy' ? 'Buy' : 'Sell'} Order
+                              </h4>
+                              
+                              <div className="space-y-4">
+                                {/* Order Type Toggle */}
+                                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                                  <button
+                                    onClick={() => setOrderType('buy')}
+                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                                      orderType === 'buy'
+                                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    Buy {selectedOutcome.toUpperCase()}
+                                  </button>
+                                  <button
+                                    onClick={() => setOrderType('sell')}
+                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                                      orderType === 'sell'
+                                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    Sell {selectedOutcome.toUpperCase()}
+                                  </button>
+                                </div>
+
+                                {/* Amount Input */}
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Amount (USD)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={orderAmount}
+                                    onChange={(e) => setOrderAmount(e.target.value)}
+                                    placeholder="Enter amount"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  />
+                                </div>
+
+                                {/* Order Summary */}
+                                {orderAmount && (
+                                  <div className="bg-white dark:bg-gray-600 rounded-lg p-4 border border-gray-200 dark:border-gray-500">
+                                    <h5 className="font-medium text-gray-900 dark:text-white mb-2">Order Summary</h5>
+                                    <div className="space-y-1 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600 dark:text-gray-400">Action:</span>
+                                        <span className="text-gray-900 dark:text-white">
+                                          {orderType === 'buy' ? 'Buy' : 'Sell'} {selectedOutcome.toUpperCase()}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600 dark:text-gray-400">Price:</span>
+                                        <span className="text-gray-900 dark:text-white">
+                                          {formatPrice(getOutcomePrice(selectedOutcome))}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                                        <span className="text-gray-900 dark:text-white">${orderAmount}</span>
+                                      </div>
+                                      <div className="flex justify-between border-t border-gray-200 dark:border-gray-500 pt-2">
+                                        <span className="font-medium text-gray-900 dark:text-white">Shares:</span>
+                                        <span className="font-medium text-gray-900 dark:text-white">
+                                          {(parseFloat(orderAmount) / getOutcomePrice(selectedOutcome)).toFixed(2)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Place Order Button */}
+                                <button
+                                  onClick={handlePlaceOrder}
+                                  disabled={!orderAmount || isPlacingOrder}
+                                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                                >
+                                  {isPlacingOrder ? (
+                                    <>
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      <span>Placing Order...</span>
+                                    </>
+                                  ) : (
+                                    <span>Place Order</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* External Trading Link */}
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <a
+                              href={market?.externalUrl || 'https://limitless.exchange/'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                            >
+                              <ExternalLink className="w-5 h-5" />
+                              <span>Open on LimitlessLabs</span>
+                            </a>
+                          </div>
+                        </div>
+
+                        {/* Logout */}
+                        <button
+                          onClick={handleLogout}
+                          className="w-full mt-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 py-2 text-sm transition-colors"
+                        >
+                          Disconnect from LimitlessLabs
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

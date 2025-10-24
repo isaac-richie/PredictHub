@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { SimpleMarketCard } from './simple-market-card';
 import { LoadMoreMarkets } from './load-more-markets';
 import { CategorySection } from './category-section';
-import { MarketDetailModal } from './market-detail-modal';
 
 interface ServerMarketsProps {
   markets: any[];
@@ -14,9 +13,19 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [isClient, setIsClient] = useState(false);
   const [showCategorySection, setShowCategorySection] = useState(false);
-  const [selectedPlatformForCategories, setSelectedPlatformForCategories] = useState<'polymarket' | 'polkamarkets'>('polymarket');
-  const [selectedMarket, setSelectedMarket] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlatformForCategories, setSelectedPlatformForCategories] = useState<'polymarket' | 'myriad'>('polymarket');
+
+  // Helper function to format currency values
+  const formatCurrency = (num: number) => {
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toFixed(0);
+  };
 
   // Handle hydration
   useEffect(() => {
@@ -36,8 +45,8 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
       switch (selectedPlatform) {
         case 'polymarket':
           return marketPlatform === 'polymarket';
-        case 'polkamarkets':
-          return marketPlatform === 'polkamarkets';
+        case 'myriad':
+          return marketPlatform === 'myriad';
         case 'omen':
           return marketPlatform === 'omen';
         case 'zeitgeist':
@@ -52,8 +61,8 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
 
   // Handle platform card clicks
   const handlePlatformClick = (platform: string) => {
-    if (platform === 'polymarket' || platform === 'polkamarkets') {
-      setSelectedPlatformForCategories(platform as 'polymarket' | 'polkamarkets');
+    if (platform === 'polymarket' || platform === 'myriad') {
+      setSelectedPlatformForCategories(platform as 'polymarket' | 'myriad');
       setShowCategorySection(true);
     } else {
       setSelectedPlatform(platform);
@@ -69,14 +78,8 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
 
   // Handle market click
   const handleMarketClick = (market: any) => {
-    setSelectedMarket(market);
-    setIsModalOpen(true);
-  };
-
-  // Handle modal close
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedMarket(null);
+    // Market click handler - can be extended for future functionality
+    console.log('Market clicked:', market);
   };
 
   if (!markets || markets.length === 0) {
@@ -179,7 +182,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
                 </h4>
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Volume: ${market.volumeNum ? (market.volumeNum / 1000).toFixed(0) + 'K' : '0'}
+                    Volume: ${formatCurrency(market.volumeNum || market.totalVolume || 0)}
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${market.active ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200' : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 dark:from-red-900 dark:to-rose-900 dark:text-red-200'}`}>
                     {market.active ? 'Active' : 'Closed'}
@@ -231,7 +234,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
                 </h4>
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Volume: ${market.volumeNum ? (market.volumeNum / 1000).toFixed(0) + 'K' : '0'}
+                    Volume: ${formatCurrency(market.volumeNum || market.totalVolume || 0)}
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${market.active ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200' : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 dark:from-red-900 dark:to-rose-900 dark:text-red-200'}`}>
                     {market.active ? 'Active' : 'Closed'}
@@ -254,13 +257,13 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
           )}
         </div>
 
-        {/* Polkamarkets Tab */}
+        {/* Myriad Markets Tab */}
         <div className={`group relative rounded-xl p-6 shadow-md border transition-all duration-300 cursor-pointer overflow-hidden ${
-          selectedPlatform === 'polkamarkets' 
+          selectedPlatform === 'myriad' 
             ? 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-50 dark:from-purple-900/30 dark:via-fuchsia-900/20 dark:to-purple-900/30 border-purple-400 dark:border-purple-500 shadow-xl ring-2 ring-purple-400 dark:ring-purple-500 ring-offset-2 dark:ring-offset-gray-900 scale-[1.02]' 
             : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-600 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]'
         }`}
-        onClick={() => handlePlatformClick('polkamarkets')}>
+        onClick={() => handlePlatformClick('myriad')}>
           {/* Hover gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-fuchsia-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           
@@ -269,21 +272,21 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
               K
             </span>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Polkamarkets</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Myriad Markets</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {markets.filter(m => m.platform === 'polkamarkets').length} markets
+                {markets.filter(m => m.platform === 'myriad').length} markets
               </p>
             </div>
           </div>
           <div className="relative space-y-3">
-            {markets.filter(m => m.platform === 'polkamarkets').slice(0, 3).map((market) => (
+            {markets.filter(m => m.platform === 'myriad').slice(0, 3).map((market) => (
               <div key={market.id} className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-2 leading-relaxed">
                   {market.question || market.title || 'Market Question'}
                 </h4>
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Volume: ${market.volumeNum ? (market.volumeNum / 1000).toFixed(0) + 'K' : '0'}
+                    Volume: ${formatCurrency(market.volumeNum || market.totalVolume || 0)}
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${market.active ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200' : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 dark:from-red-900 dark:to-rose-900 dark:text-red-200'}`}>
                     {market.active ? 'Active' : 'Closed'}
@@ -292,15 +295,15 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
               </div>
             ))}
           </div>
-          {markets.filter(m => m.platform === 'polkamarkets').length > 3 && (
+          {markets.filter(m => m.platform === 'myriad').length > 3 && (
             <button 
               className="relative w-full mt-4 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white font-semibold rounded-lg transition-all duration-200 text-sm shadow-md hover:shadow-lg active:scale-95 overflow-hidden group"
               onClick={(e) => {
                 e.stopPropagation();
-                handlePlatformClick('polkamarkets');
+                handlePlatformClick('myriad');
               }}
             >
-              <span className="relative z-10">View All ({markets.filter(m => m.platform === 'polkamarkets').length - 3} more)</span>
+              <span className="relative z-10">View All ({markets.filter(m => m.platform === 'myriad').length - 3} more)</span>
               <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
             </button>
           )}
@@ -312,7 +315,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
                 </svg>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Real Polkamarkets blockchain integration in progress
+                Real Myriad Markets blockchain integration in progress
               </p>
             </div>
           )}
@@ -376,7 +379,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {selectedPlatform === 'all' ? 'Featured Markets' : 
              selectedPlatform === 'polymarket' ? 'Polymarket Markets' :
-             selectedPlatform === 'polkamarkets' ? 'Polkamarkets Markets' :
+             selectedPlatform === 'myriad' ? 'Myriad Markets' :
              selectedPlatform === 'omen' ? 'Omen Markets' :
              selectedPlatform === 'zeitgeist' ? 'Zeitgeist Markets' : 'Featured Markets'}
           </h2>
@@ -385,7 +388,7 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
             {selectedPlatform !== 'all' && (
               <span className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs">
                 {selectedPlatform === 'polymarket' ? 'Polymarket' :
-                 selectedPlatform === 'polkamarkets' ? 'Polkamarkets' :
+                 selectedPlatform === 'myriad' ? 'Myriad Markets' :
                  selectedPlatform === 'omen' ? 'Omen' :
                  selectedPlatform === 'zeitgeist' ? 'Zeitgeist' : selectedPlatform}
               </span>
@@ -420,12 +423,6 @@ export function ServerMarkets({ markets }: ServerMarketsProps) {
         )}
       </div>
 
-      {/* Market Detail Modal */}
-      <MarketDetailModal
-        market={selectedMarket}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-      />
     </div>
   );
 }

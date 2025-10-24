@@ -5,7 +5,7 @@ import { SimpleMarketCard } from './simple-market-card';
 import { PolymarketStyleModal } from './polymarket-style-modal';
 
 interface CategorySectionProps {
-  platform: 'polymarket' | 'polkamarkets' | 'limitlesslabs';
+  platform: 'polymarket' | 'myriad' | 'limitlesslabs';
   onBack: () => void;
 }
 
@@ -126,7 +126,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
   ];
 
   // Polkamarkets official categories (6 categories)
-  const polkamarketsCategories = [
+  const myriadCategories = [
     { 
       id: 'all', 
       name: 'All Markets', 
@@ -213,6 +213,15 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
       count: '25+'
     },
     { 
+      id: 'stocks', 
+      name: 'Stocks', 
+      description: 'SPY, NASDAQ, and stock index predictions',
+      color: 'from-green-400 via-emerald-500 to-teal-500', 
+      bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
+      icon: '📈',
+      count: '10+'
+    },
+    { 
       id: 'Hourly', 
       name: 'Hourly', 
       description: 'Fast-paced hourly price predictions',
@@ -243,19 +252,19 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
 
   // Select categories based on platform
   const categories = platform === 'polymarket' ? polymarketCategories : 
-                     platform === 'polkamarkets' ? polkamarketsCategories : 
+                     platform === 'myriad' ? myriadCategories : 
                      limitlesslabsCategories;
 
   const getPlatformName = () => {
     return platform === 'polymarket' ? 'Polymarket' : 
-           platform === 'polkamarkets' ? 'Polkamarkets' : 
+           platform === 'myriad' ? 'Myriad Markets' : 
            'Limitless';
   };
 
   const getPlatformColor = () => {
     return platform === 'polymarket' 
       ? 'from-blue-500 to-cyan-500' 
-      : platform === 'polkamarkets'
+      : platform === 'myriad'
       ? 'from-purple-500 to-purple-600'
       : 'from-cyan-500 to-teal-500';
   };
@@ -278,9 +287,11 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
     try {
       let response;
       
-      // For LimitlessLabs, fetch directly to avoid timeout issues
+      // For specific platforms, fetch directly to avoid timeout issues
       if (platform === 'limitlesslabs') {
         response = await fetch(`/api/limitlesslabs?endpoint=markets&limit=25&offset=0`);
+      } else if (platform === 'myriad') {
+        response = await fetch(`/api/myriad?endpoint=markets&limit=25&offset=0`);
       } else {
         response = await fetch(`/api/load-more?limit=20&offset=0&platform=${platform}&category=${category}`);
       }
@@ -317,7 +328,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
       
       // Crypto category - filter by crypto symbols
       if (selectedCategory === 'crypto') {
-        const cryptoKeywords = ['btc', 'eth', 'sol', 'doge', 'xrp', 'link', 'avax', 'matic', 'ada', 'dot', 'atom', 'near', 'apt', 'sui', 'arb', 'op', 'bitcoin', 'ethereum', 'solana', 'dogecoin', 'ripple', 'chainlink', 'avalanche', 'polygon', 'cardano', 'polkadot', 'cosmos', 'aptos', 'arbitrum', 'optimism', '$btc', '$eth', '$sol', '$doge', '$xrp', '$link'];
+        const cryptoKeywords = ['btc', 'eth', 'sol', 'doge', 'xrp', 'link', 'avax', 'matic', 'ada', 'dot', 'atom', 'near', 'apt', 'sui', 'arb', 'op', 'hbar', 'kaito', 'pump', '$btc', '$eth', '$sol', '$doge', '$xrp'];
         return cryptoKeywords.some(keyword => titleLower.includes(keyword));
       }
       
@@ -413,7 +424,7 @@ export function CategorySection({ platform, onBack }: CategorySectionProps) {
             <div className={`w-16 h-16 bg-gradient-to-br ${getPlatformColor()} rounded-2xl flex items-center justify-center shadow-lg overflow-hidden`}>
               {platform === 'polymarket' ? (
                 <img src="/logos/id98Ai2eTk_logos.jpeg" alt="Polymarket logo" className="w-10 h-10 object-contain" />
-              ) : platform === 'polkamarkets' ? (
+              ) : platform === 'myriad' ? (
                 <img src="/logos/PM4n0IL9_400x400-removebg-preview.png" alt="Polkamarkets logo" className="w-10 h-10 object-contain" />
               ) : (
                 <img src="/logos/limitlesslabs.svg" alt="Limitless logo" className="w-10 h-10 object-contain" />

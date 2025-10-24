@@ -2,13 +2,17 @@ import { createApiClient } from '@/lib/api-client';
 import { PolymarketMarket, PolymarketCategory } from '@/types/polymarket-detailed';
 import { PredictionMarket, MarketStats } from '@/types/prediction-market';
 
+const POLYMARKET_API_BASE_URL = process.env.NEXT_PUBLIC_POLYMARKET_API || 'https://gamma-api.polymarket.com';
+
 export class PolymarketApiService {
   private apiClient;
 
   constructor(apiKey?: string) {
-    // Always use Next.js API proxy route for consistency
+    // Use external API directly for better Vercel compatibility
+    const baseUrl = POLYMARKET_API_BASE_URL;
+    
     this.apiClient = createApiClient(
-      '/api/polymarket',
+      baseUrl,
       {
         apiKey,
         requestsPerMinute: 60,
@@ -19,17 +23,18 @@ export class PolymarketApiService {
   }
 
   // Fetch all active markets
-  async getActiveMarkets(limit: number = 150, offset: number = 0): Promise<PredictionMarket[]> {
+  async getActiveMarkets(limit: number = 250, offset: number = 0, timeframe: string = 'all'): Promise<PredictionMarket[]> {
     try {
-      console.log('🔍 PolymarketAPI: Fetching active markets, limit:', limit, 'offset:', offset);
+      console.log('🔍 PolymarketAPI: Fetching active markets, limit:', limit, 'offset:', offset, 'timeframe:', timeframe);
       
-      const response = await this.apiClient.get<PolymarketMarket[]>('', {
+      // Call Polymarket API directly
+      const response = await this.apiClient.get<PolymarketMarket[]>('/markets', {
         params: {
-          endpoint: 'markets',
           limit,
           offset,
           active: true,
           archived: false,
+          closed: false, // Only get active markets, not closed ones
         },
       });
 
@@ -50,11 +55,7 @@ export class PolymarketApiService {
   // Fetch market by ID
   async getMarketById(marketId: string): Promise<PredictionMarket | null> {
     try {
-      const response = await this.apiClient.get<PolymarketMarket>('', {
-        params: {
-          endpoint: `markets/${marketId}`,
-        },
-      });
+      const response = await this.apiClient.get<PolymarketMarket>(`/markets/${marketId}`);
       return this.transformMarketData(response);
     } catch (error) {
       console.error(`Error fetching Polymarket market ${marketId}:`, error);
@@ -65,10 +66,12 @@ export class PolymarketApiService {
   // Fetch market statistics
   async getMarketStats(): Promise<MarketStats> {
     try {
-      const marketsResponse = await this.apiClient.get<PolymarketMarket[]>('', {
+      const marketsResponse = await this.apiClient.get<PolymarketMarket[]>('/markets', {
         params: { 
-          endpoint: 'markets',
-          limit: 1000 // Get a large sample for stats
+          limit: 1000, // Get a large sample for stats
+          active: true,
+          archived: false,
+          closed: false
         }
       });
 
@@ -118,11 +121,7 @@ export class PolymarketApiService {
   // Get all categories
   async getCategories(): Promise<PolymarketCategory[]> {
     try {
-      const response = await this.apiClient.get<PolymarketCategory[]>('', {
-        params: {
-          endpoint: 'categories',
-        },
-      });
+      const response = await this.apiClient.get<PolymarketCategory[]>('/categories');
       return response;
     } catch (error) {
       console.error('Error fetching Polymarket categories:', error);
@@ -133,12 +132,12 @@ export class PolymarketApiService {
   // Search markets
   async searchMarkets(query: string, limit: number = 20): Promise<PredictionMarket[]> {
     try {
-      const response = await this.apiClient.get<any[]>('', {
+      const response = await this.apiClient.get<any[]>('/markets/search', {
         params: {
-          endpoint: 'markets/search',
           q: query,
           limit,
           active: true,
+          closed: false,
         },
       });
 
@@ -154,12 +153,12 @@ export class PolymarketApiService {
   // Get markets by category
   async getMarketsByCategory(category: string, limit: number = 50): Promise<PredictionMarket[]> {
     try {
-      const response = await this.apiClient.get<any[]>('', {
+      const response = await this.apiClient.get<any[]>('/markets', {
         params: {
-          endpoint: 'markets',
           category,
           limit,
           active: true,
+          closed: false,
         },
       });
 
@@ -265,8 +264,8 @@ export class PolymarketApiService {
       const yesPrice = outcomePrices[0] || 0;
       const noPrice = outcomePrices[1] || (1 - yesPrice);
 
-      // Extract category
-      const category = this.extractCategory(marketData);
+      // Use category from API response (already extracted by our API route)
+      const category = marketData.category || this.extractCategory(marketData);
 
       const transformedMarket = {
         id: `polymarket_${marketData.id}`,

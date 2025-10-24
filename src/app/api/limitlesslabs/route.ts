@@ -10,17 +10,40 @@ export async function GET(request: Request) {
   const endpoint = searchParams.get('endpoint') || 'markets';
   const limit = parseInt(searchParams.get('limit') || '50', 10);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
+  const timeframe = searchParams.get('timeframe') || 'all'; // all, 24h, 7d, 30d, future
 
-  console.log(`🔍 LimitlessLabs API: Fetching ${endpoint}, limit: ${limit}, offset: ${offset}`);
+  console.log(`🔍 LimitlessLabs API: Fetching ${endpoint}, limit: ${limit}, offset: ${offset}, timeframe: ${timeframe}`);
 
   try {
     if (endpoint === 'markets') {
-      // Fetch active markets from LimitlessLabs (max 25 per request)
-      const maxLimit = Math.min(limit, 25);
-      const response = await fetch(
-        `https://api.limitless.exchange/markets/active?page=1&limit=${maxLimit}`,
-        { next: { revalidate: 60 } }
-      );
+      // Use offset to calculate page number for pagination
+      const maxLimit = 25; // LimitlessLabs API max limit
+      const page = Math.floor(offset / maxLimit) + 1; // Convert offset to page number
+      let apiUrl = '';
+      
+      switch (timeframe) {
+        case '24h':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=24h`;
+          break;
+        case '7d':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=7d`;
+          break;
+        case '30d':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=30d`;
+          break;
+        case 'future':
+          apiUrl = `https://api.limitless.exchange/markets/upcoming?page=${page}&limit=${maxLimit}`;
+          break;
+        case 'trending':
+          apiUrl = `https://api.limitless.exchange/markets/trending?page=${page}&limit=${maxLimit}`;
+          break;
+        default:
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}`;
+      }
+      
+      console.log(`🔍 LimitlessLabs API: Fetching: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, { next: { revalidate: 60 } });
 
       if (!response.ok) {
         console.error(`❌ LimitlessLabs API: Failed to fetch markets, status: ${response.status}`);
@@ -68,7 +91,7 @@ export async function GET(request: Request) {
           liquidity: liquidityNum,
           totalVolume: volumeNum,
           openInterest: openInterestNum,
-          externalUrl: market.slug ? `https://limitless.exchange/market/${market.slug}` : undefined,
+          externalUrl: market.slug ? `https://limitless.exchange/advanced/markets/${market.slug}` : 'https://limitless.exchange/',
           slug: market.slug,
           volumeNum,
           liquidityNum,

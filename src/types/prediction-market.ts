@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Base prediction market schema
 export const PredictionMarketSchema = z.object({
   id: z.string(),
-  platform: z.enum(['polymarket', 'zeitgeist', 'omen', 'polkamarkets', 'limitlesslabs', 'other']),
+  platform: z.enum(['polymarket', 'zeitgeist', 'omen', 'polkamarkets', 'myriad', 'limitlesslabs', 'other']),
   title: z.string(),
   question: z.string().optional(),
   description: z.string().optional(),
@@ -176,8 +176,24 @@ export class PredictionMarketError extends Error {
     public statusCode?: number,
     public originalError?: Error
   ) {
-    super(message);
+    // Ensure message is a string and not empty
+    const safeMessage = typeof message === 'string' && message.trim() ? message : 'Unknown prediction market error';
+    super(safeMessage);
     this.name = 'PredictionMarketError';
+    
+    // Ensure platform is valid
+    this.platform = typeof platform === 'string' && platform.trim() ? platform : 'unknown';
+    
+    // Ensure statusCode is a valid number
+    this.statusCode = typeof statusCode === 'number' && statusCode > 0 ? statusCode : undefined;
+    
+    // Only store originalError if it's a valid Error object
+    this.originalError = originalError instanceof Error ? originalError : undefined;
+    
+    // Maintain proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, PredictionMarketError);
+    }
   }
 }
 

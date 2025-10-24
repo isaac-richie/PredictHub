@@ -1,6 +1,9 @@
 import { createApiClient } from '@/lib/api-client';
 import { PredictionMarket } from '@/types/prediction-market';
 
+// Polkamarkets doesn't have a public API, so we'll use mock data for now
+const POLKAMARKETS_API_BASE_URL = process.env.NEXT_PUBLIC_POLKAMARKETS_API || 'https://api.polkamarkets.com';
+
 // Polkamarkets API types
 export interface PolkamarketsMarket {
   id: string;
@@ -31,10 +34,9 @@ export class PolkamarketsApiService {
   private apiClient;
 
   constructor(apiKey?: string) {
-    // For now, we'll use a mock approach since Polkamarkets doesn't seem to have a public REST API
-    // In the future, this could be updated to use their SDK or any discovered endpoints
+    // Polkamarkets doesn't have a public API, always use our proxy route with mock data
     this.apiClient = createApiClient(
-      '/api/polkamarkets', // We'll create a proxy route
+      '/api/polkamarkets',
       {
         apiKey,
         requestsPerMinute: 60,
@@ -49,7 +51,7 @@ export class PolkamarketsApiService {
     try {
       console.log('🔍 PolkamarketsAPI: Fetching active markets, limit:', limit, 'offset:', offset);
       
-      // Fetch from our enhanced Polkamarkets API route with 200 markets
+      // Always use proxy route since Polkamarkets doesn't have a public API
       const markets = await this.apiClient.get<any[]>('', {
         params: {
           endpoint: 'markets',

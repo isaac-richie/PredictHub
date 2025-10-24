@@ -5,7 +5,6 @@ import { Search } from 'lucide-react';
 import { CategorySection } from './category-section';
 import { SimpleMarketCard } from './simple-market-card';
 import { PredictionMarket } from '@/types/prediction-market';
-import { PolymarketStyleModal } from './polymarket-style-modal';
 
 // SSR-safe date formatting function - handles both Date objects and ISO strings
 const formatDate = (dateInput: string | Date | undefined): string => {
@@ -34,41 +33,50 @@ interface ServerMarketsProps {
 
 export default function EnhancedServerMarkets({ markets, onMarketClick }: ServerMarketsProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
-  const [selectedMarket, setSelectedMarket] = useState<PredictionMarket | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCategorySection, setShowCategorySection] = useState(false);
-  const [selectedPlatformForCategories, setSelectedPlatformForCategories] = useState<'polymarket' | 'polkamarkets' | 'limitlesslabs'>('polymarket');
+  const [selectedPlatformForCategories, setSelectedPlatformForCategories] = useState<'polymarket' | 'myriad' | 'limitlesslabs'>('polymarket');
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PredictionMarket[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchDebounceTimer, setSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Helper function to format currency values
+  const formatCurrency = (num: number) => {
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toFixed(0);
+  };
   
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(12);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const handlePlatformClick = (platform: string) => {
-    if (platform === 'polymarket' || platform === 'polkamarkets' || platform === 'limitlesslabs') {
-      setSelectedPlatformForCategories(platform as 'polymarket' | 'polkamarkets' | 'limitlesslabs');
+    console.log('🔍 Platform clicked:', platform);
+    if (platform === 'polymarket' || platform === 'myriad' || platform === 'limitlesslabs') {
+      console.log('🔍 Setting category section for platform:', platform);
+      setSelectedPlatformForCategories(platform as 'polymarket' | 'myriad' | 'limitlesslabs');
       setShowCategorySection(true);
       return;
     }
+    console.log('🔍 Setting regular platform view for:', platform);
     setSelectedPlatform(platform);
     setShowCategorySection(false);
   };
 
   const handleMarketClick = (market: PredictionMarket) => {
-    setSelectedMarket(market);
-    setIsModalOpen(true);
+    console.log('🔍 EnhancedServerMarkets handleMarketClick called:', market.title || market.question);
+    console.log('🔍 onMarketClick function exists:', !!onMarketClick);
     onMarketClick?.(market);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedMarket(null);
-  };
 
   // Search handler with debouncing
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,10 +189,10 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
       shadowColor: 'shadow-blue-500/20'
     },
     {
-      id: 'polkamarkets',
-      name: 'Polkamarkets',
+      id: 'myriad',
+      name: 'Myriad Markets',
       icon: undefined,
-      logo: '/logos/PM4n0IL9_400x400-removebg-preview.png',
+      logo: '/logos/myraid.jpeg',
       gradient: 'from-purple-600 via-fuchsia-600 to-pink-600',
       hoverGradient: 'from-purple-500 via-fuchsia-500 to-pink-500',
       bgGradient: 'from-purple-50 via-fuchsia-50 to-pink-50',
@@ -196,8 +204,8 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
     {
       id: 'limitlesslabs',
       name: 'Limitless',
-      icon: 'L',
-      logo: undefined,
+      icon: undefined,
+      logo: '/logos/limitlesslabs.svg',
       gradient: 'from-cyan-600 via-sky-600 to-blue-600',
       hoverGradient: 'from-cyan-500 via-sky-500 to-blue-500',
       bgGradient: 'from-cyan-50 via-sky-50 to-blue-50',
@@ -205,18 +213,33 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
       borderColor: 'border-cyan-400 dark:border-cyan-500',
       hoverBorderColor: 'hover:border-cyan-300 dark:hover:border-cyan-600',
       shadowColor: 'shadow-cyan-500/20'
+    },
+    {
+      id: 'kalshi',
+      name: 'Kalshi',
+      icon: 'K',
+      logo: undefined,
+      gradient: 'from-green-500 via-emerald-500 to-teal-500',
+      hoverGradient: 'from-green-400 via-emerald-400 to-teal-400',
+      bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
+      darkBgGradient: 'from-green-900/30 via-emerald-900/20 to-teal-900/30',
+      borderColor: 'border-green-400 dark:border-green-500',
+      hoverBorderColor: 'hover:border-green-300 dark:hover:border-green-600',
+      shadowColor: 'shadow-green-500/30'
     }
   ];
 
   const getPlatformLogo = (platformId: string) => {
     const id = (platformId || '').toLowerCase();
     if (id === 'polymarket') return '/logos/id98Ai2eTk_logos.jpeg';
-    if (id === 'polkamarkets') return '/logos/PM4n0IL9_400x400-removebg-preview.png';
-    if (id === 'limitlesslabs') return '';
+    if (id === 'myriad') return '/logos/myraid.jpeg';
+    if (id === 'limitlesslabs') return '/logos/limitlesslabs.svg';
+    if (id === 'kalshi') return ''; // No specific logo yet, uses icon
     return '';
   };
 
   if (showCategorySection) {
+    console.log('🔍 Rendering CategorySection for platform:', selectedPlatformForCategories);
     return (
       <CategorySection
         platform={selectedPlatformForCategories}
@@ -334,7 +357,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                 {/* Header Section (compact) */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${
-                    platform.id === 'polymarket'
+                    platform.logo
                       ? 'bg-transparent shadow-none'
                       : `text-xl font-bold shadow-sm ${
                           isSelected
@@ -348,10 +371,16 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                         alt={`${platform.name} logo`}
                         width={40}
                         height={40}
-                        className={`w-10 h-10 object-contain ${platform.id === 'polymarket' ? 'rounded-lg ring-1 ring-black/5 dark:ring-white/10' : 'drop-shadow-sm rounded'}`}
+                        className="w-10 h-10 object-contain rounded-lg drop-shadow-sm"
                         onError={(e) => {
                           const el = e.currentTarget as HTMLImageElement;
-                          el.src = platform.id === 'polymarket' ? '/logos/polymarket.svg' : '/logos/polkamarkets.svg';
+                          if (platform.id === 'polymarket') {
+                            el.src = '/logos/polymarket.svg';
+                          } else if (platform.id === 'myriad') {
+                            el.src = '/logos/myraid.jpeg';
+                          } else if (platform.id === 'limitlesslabs') {
+                            el.src = '/logos/limitlesslabs.svg';
+                          }
                         }}
                       />
                     ) : (
@@ -376,50 +405,71 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                   </div>
                 </div>
 
-                {/* Market Previews (2 compact rows) */}
-                <div className="space-y-2 mb-4">
-                  {platformMarkets.slice(0, 2).map((market) => (
-                    <div 
-                      key={market.id} 
-                      onClick={() => handleMarketClick(market)}
-                      className="group/item relative p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug mb-2 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">
-                            {market.title || 'Market Question'}
-                          </h4>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Vol:</span>
-                                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                                  ${market.totalVolume ? (market.totalVolume / 1000).toFixed(0) + 'K' : '0'}
-                                </span>
+                {/* Market Previews (3 compact rows) OR Coming Soon Message */}
+                {platformMarkets.length > 0 ? (
+                  <div className="space-y-2 mb-4">
+                    {platformMarkets.slice(0, 3).map((market) => (
+                      <div 
+                        key={market.id} 
+                        onClick={() => handleMarketClick(market)}
+                        className="group/item relative p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug mb-2 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">
+                              {market.title || 'Market Question'}
+                            </h4>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Vol:</span>
+                                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                                    ${formatCurrency(market.totalVolume || 0)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Liq:</span>
+                                  <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
+                                    ${formatCurrency(market.liquidity || 0)}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Liq:</span>
-                                <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
-                                  ${market.liquidity ? (market.liquidity / 1000).toFixed(0) + 'K' : '0'}
-                                </span>
-                              </div>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
+                                market.active
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                              }`}>
+                                {market.active ? '● Live' : '○ End'}
+                              </span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
-                              market.active
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
-                            }`}>
-                              {market.active ? '● Live' : '○ End'}
-                            </span>
                           </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Coming Soon Message for Empty Platforms */
+                  <div className="mb-4 p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center">
+                    <div className="flex justify-center mb-3">
+                      <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${platform.gradient} flex items-center justify-center animate-pulse`}>
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+                      {platform.id === 'kalshi' ? '🎯 Kalshi Markets Coming Soon!' : 'Markets Coming Soon'}
+                    </h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {platform.id === 'kalshi' 
+                        ? 'Regulated event contracts & real-money predictions launching soon. Stay tuned!' 
+                        : `Stay tuned for ${platform.name} integration`}
+                    </p>
+                  </div>
+                )}
 
                 {/* Action Button (compact) */}
-                {platformMarkets.length > 2 && (
+                {platformMarkets.length > 3 ? (
                   <button
                     className={`relative w-full px-4 py-2.5 bg-gradient-to-r ${platform.gradient} hover:${platform.hoverGradient} text-white font-semibold rounded-lg transition-colors text-sm`}
                     onClick={(e) => {
@@ -430,8 +480,17 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       <span>Explore {platform.name}</span>
                       <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">
-                        {platformMarkets.length - 2} more
+                        {platformMarkets.length - 3} more
                       </span>
+                    </span>
+                  </button>
+                ) : platformMarkets.length === 0 && (
+                  <button
+                    className={`relative w-full px-4 py-2.5 bg-gradient-to-r ${platform.gradient} opacity-60 cursor-not-allowed text-white font-semibold rounded-lg text-sm`}
+                    disabled
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <span>{platform.id === 'kalshi' ? '🚀 Coming Soon' : 'Coming Soon'}</span>
                     </span>
                   </button>
                 )}
@@ -449,7 +508,7 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {selectedPlatform === 'all' ? 'All Markets' : 
              selectedPlatform === 'polymarket' ? 'Polymarket' :
-             selectedPlatform === 'polkamarkets' ? 'Polkamarkets' : 'Omen'}
+             selectedPlatform === 'myriad' ? 'Myriad Markets' : 'Omen'}
           </h2>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -496,13 +555,13 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                 <div className="text-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Volume</div>
                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                    ${market.totalVolume ? (market.totalVolume / 1000).toFixed(0) + 'K' : '0'}
+                    ${formatCurrency(market.totalVolume || 0)}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Liquidity</div>
                   <div className="text-sm font-bold text-purple-600 dark:text-purple-400">
-                    ${market.liquidity ? (market.liquidity / 1000).toFixed(0) + 'K' : '0'}
+                    ${formatCurrency(market.liquidity || 0)}
                   </div>
                 </div>
               </div>
@@ -524,12 +583,13 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
                         data-platform={market.platform}
                         onError={(e) => {
                           const el = e.currentTarget as HTMLImageElement;
-                          el.src = market.platform === 'polymarket' ? '/logos/polymarket.svg' : '/logos/polkamarkets.svg';
+                          el.src = market.platform === 'polymarket' ? '/logos/polymarket.svg' : '/logos/myriad.svg';
                         }}
                       />
                     ) : (
                       <span className={`px-2 py-1 rounded-md text-xs font-medium ${
                         market.platform === 'polymarket' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' :
+                        market.platform === 'myriad' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300' :
                         market.platform.toLowerCase().includes('polka') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300' :
                         'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300'
                       }`}>
@@ -584,14 +644,6 @@ export default function EnhancedServerMarkets({ markets, onMarketClick }: Server
 
       )}
 
-      {/* Polymarket-Style Market Detail Modal */}
-      {selectedMarket && (
-        <PolymarketStyleModal
-          market={selectedMarket}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
-      )}
     </div>
   );
 }

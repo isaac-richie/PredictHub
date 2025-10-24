@@ -17,27 +17,8 @@ export class ApiClient {
       timeout?: number;
     } = {}
   ) {
-    // Handle server-side requests by using absolute URLs
-    // In production (Vercel), use the deployed URL, otherwise use localhost
-    const isProduction = process.env.NODE_ENV === 'production';
-    const port = process.env.PORT || '3000';
-    
-    let fullBaseUrl: string;
-    if (baseUrl.startsWith('http')) {
-      fullBaseUrl = baseUrl;
-    } else if (isProduction) {
-      // Use the deployed URL for production
-      const deployedUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
-      if (deployedUrl) {
-        fullBaseUrl = `https://${deployedUrl}${baseUrl}`;
-      } else {
-        // Fallback for production without VERCEL_URL
-        fullBaseUrl = `https://predicthub.vercel.app${baseUrl}`;
-      }
-    } else {
-      // Development
-      fullBaseUrl = `http://localhost:${port}${baseUrl}`;
-    }
+    // Use the baseUrl directly since we're calling external APIs
+    const fullBaseUrl = baseUrl;
     
     this.instance = axios.create({
       baseURL: fullBaseUrl,
@@ -63,13 +44,29 @@ export class ApiClient {
         return response;
       },
       (error) => {
-        console.log('🔍 ApiClient: Error occurred:', error.message, error.response?.status);
-        throw new PredictionMarketError(
-          error.response?.data?.message || error.message,
-          this.baseUrl.includes('polymarket') ? 'polymarket' : 'unknown',
-          error.response?.status,
-          error
-        );
+        console.log('🔍 ApiClient: Error occurred:', error?.message || 'Unknown error', error?.response?.status);
+        
+        try {
+          // Safely extract error details with proper null checks
+          const message = error?.response?.data?.message || error?.message || 'Unknown error';
+          const statusCode = error?.response?.status || 500;
+          const platform = this.baseUrl.includes('polymarket') ? 'polymarket' : 
+                          this.baseUrl.includes('limitless') ? 'limitlesslabs' :
+                          this.baseUrl.includes('myriad') ? 'myriad' : 'unknown';
+          
+          // Create a safe error object to avoid circular references
+          const safeError = error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          } : error;
+          
+          throw new PredictionMarketError(message, platform, statusCode, safeError as Error);
+        } catch (constructionError) {
+          // If PredictionMarketError construction fails, throw a simple error
+          console.error('🔍 ApiClient: Failed to construct PredictionMarketError:', constructionError);
+          throw new Error(`API Error: ${error?.message || 'Unknown error'} (Platform: ${this.baseUrl})`);
+        }
       }
     );
   }
@@ -163,6 +160,16 @@ export class ApiClient {
     }
 
     throw lastError!;
+  }
+
+  // Set authentication token for API requests
+  setAuthToken(token: string): void {
+    this.instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Remove authentication token
+  removeAuthToken(): void {
+    delete this.instance.defaults.headers.common['Authorization'];
   }
 }
 

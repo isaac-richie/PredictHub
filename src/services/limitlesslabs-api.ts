@@ -17,7 +17,8 @@ function normalizeMarket(raw: any): PredictionMarket {
 
   // Formatted values appear to be in thousands (e.g., 164.109293 => 164.1K)
   const volumeNum = toNumber(raw.volumeFormatted) * 1000 || toNumber(raw.volume);
-  const liquidityNum = toNumber(raw.liquidityFormatted) * 1000 || toNumber(raw.liquidity);
+  // Limitless API doesn't provide liquidity data, so we'll use volume as a proxy
+  const liquidityNum = toNumber(raw.liquidityFormatted) * 1000 || toNumber(raw.liquidity) || (volumeNum * 0.1); // Use 10% of volume as liquidity estimate
   const openInterestNum = toNumber(raw.openInterestFormatted) * 1000 || toNumber(raw.openInterest);
 
   return {
@@ -58,62 +59,54 @@ async function safeJson(res: Response) {
 }
 
 export const limitlessApi = {
-  async getActiveMarkets(limit: number = 100): Promise<PredictionMarket[]> {
-    console.log(`🔍 LimitlessLabs: getActiveMarkets CALLED with limit: ${limit}`);
+  async getActiveMarkets(limit: number = 150, offset: number = 0, timeframe: string = 'all'): Promise<PredictionMarket[]> {
+    console.log(`🔍 LimitlessLabs: getActiveMarkets CALLED with limit: ${limit}, offset: ${offset}, timeframe: ${timeframe}`);
     try {
-      // LimitlessLabs API has a max limit of 25 per request
-      const maxPerRequest = 25;
-      const requestedLimit = Math.min(limit, maxPerRequest);
+      // Always call the external API directly to avoid circular dependencies
+      console.log(`🔍 LimitlessLabs: Fetching external API directly`);
       
-      const url = `https://api.limitless.exchange/markets/active?page=1&limit=${requestedLimit}`;
-      console.log(`🔍 LimitlessLabs: Fetching from URL: ${url} (max ${maxPerRequest} per request)`);
+      // Calculate page from offset
+      const maxLimit = 25;
+      const page = Math.floor(offset / maxLimit) + 1;
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      let apiUrl = '';
+      switch (timeframe) {
+        case '24h':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=24h`;
+          break;
+        case '7d':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=7d`;
+          break;
+        case '30d':
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}&sort=volume&timeframe=30d`;
+          break;
+        case 'future':
+          apiUrl = `https://api.limitless.exchange/markets/upcoming?page=${page}&limit=${maxLimit}`;
+          break;
+        case 'trending':
+          apiUrl = `https://api.limitless.exchange/markets/trending?page=${page}&limit=${maxLimit}`;
+          break;
+        default:
+          apiUrl = `https://api.limitless.exchange/markets/active?page=${page}&limit=${maxLimit}`;
+      }
       
-      const res = await fetch(url, { 
-        signal: controller.signal,
-        next: { revalidate: 60 },
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'PredictHub/1.0',
-        }
-      });
+      console.log(`🔍 LimitlessLabs: External API URL: ${apiUrl}`);
       
-      clearTimeout(timeoutId);
-      console.log(`🔍 LimitlessLabs: Response received, status: ${res.status}`);
+      const res = await fetch(apiUrl, { next: { revalidate: 60 } });
       
       if (!res.ok) {
-        console.error(`❌ LimitlessLabs: HTTP error ${res.status}`);
-        const errorText = await res.text();
-        console.error(`❌ LimitlessLabs: Error response: ${errorText.substring(0, 200)}`);
+        console.error(`❌ LimitlessLabs: External API error ${res.status}`);
         return [];
       }
       
-      const data = await safeJson(res);
-      console.log(`🔍 LimitlessLabs: Data parsed, type: ${Array.isArray(data) ? 'array' : typeof data}`);
+      const data = await res.json();
+      const markets = Array.isArray(data) ? data : (data.items || data.data || []);
       
-      if (data && typeof data === 'object') {
-        console.log(`🔍 LimitlessLabs: Data keys: ${Object.keys(data).join(', ')}`);
-      }
+      console.log(`✅ LimitlessLabs: External API returned ${markets.length} markets`);
       
-      const items = Array.isArray(data) ? data : (data.items || data.data || []);
-      console.log(`✅ LimitlessLabs: Extracted ${items.length} items from response`);
-      
-      if (items.length === 0) {
-        console.warn(`⚠️ LimitlessLabs: No markets found. Full data:`, JSON.stringify(data).substring(0, 500));
-      }
-      
-      const normalized = items.map(normalizeMarket);
-      console.log(`✅ LimitlessLabs: Returning ${normalized.length} normalized markets`);
-      return normalized;
+      return markets.map(normalizeMarket);
     } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') {
-        console.error('❌ LimitlessLabs: Request timeout after 10 seconds');
-      } else {
-        console.error('❌ LimitlessLabs getActiveMarkets error:', e instanceof Error ? e.message : String(e));
-        console.error('❌ LimitlessLabs error stack:', e instanceof Error ? e.stack : 'No stack');
-      }
+      console.error('❌ LimitlessLabs getActiveMarkets error:', e instanceof Error ? e.message : String(e));
       return [];
     }
   },

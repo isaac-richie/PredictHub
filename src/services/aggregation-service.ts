@@ -1,24 +1,24 @@
 import { PredictionMarket, MarketStats } from '@/types/prediction-market';
 import { polymarketApi } from './polymarket-api';
-import { polkamarketsApi } from './polkamarkets-api';
+import { myriadApi } from './myriad-api';
 import { limitlessApi } from './limitlesslabs-api';
 
 export class AggregationService {
   private platforms = [
     { name: 'polymarket', api: polymarketApi },
-    { name: 'polkamarkets', api: polkamarketsApi },
+    { name: 'myriad', api: myriadApi },
     { name: 'limitlesslabs', api: limitlessApi },
   ];
 
 
   // Get all markets from all platforms
-  async getAllMarkets(limit: number = 300): Promise<PredictionMarket[]> {
+  async getAllMarkets(limit: number = 500, timeframe: string = 'all'): Promise<PredictionMarket[]> {
     try {
-      console.log('🔍 AggregationService: Getting all markets, limit:', limit);
+      console.log('🔍 AggregationService: Getting all markets, limit:', limit, 'timeframe:', timeframe);
       console.log('🔍 Available platforms:', this.platforms.map(p => p.name));
       
       const platformPromises = this.platforms.map(platform => 
-        platform.api.getActiveMarkets(Math.ceil(limit / this.platforms.length))
+        platform.api.getActiveMarkets(Math.ceil(limit / this.platforms.length), 0, timeframe)
           .catch(error => {
             console.error(`Error fetching markets from ${platform.name}:`, error);
             // Return empty array on any error to prevent total failure
@@ -33,15 +33,95 @@ export class AggregationService {
       const allMarkets = results.flat();
       console.log('🔍 Total markets after flattening:', allMarkets.length);
 
-      // Sort by volume (descending) and return top results
-      const sortedMarkets = allMarkets
-        .sort((a, b) => b.totalVolume - a.totalVolume)
+      // Ensure balanced platform representation by taking top markets from each platform
+      const marketsPerPlatform = Math.ceil(limit / this.platforms.length);
+      const balancedMarkets: PredictionMarket[] = [];
+      
+      // Group markets by platform
+      const marketsByPlatform = allMarkets.reduce((acc, market) => {
+        if (!acc[market.platform]) acc[market.platform] = [];
+        acc[market.platform].push(market);
+        return acc;
+      }, {} as Record<string, PredictionMarket[]>);
+      
+      // Take top markets from each platform (sorted by volume)
+      Object.entries(marketsByPlatform).forEach(([platform, markets]) => {
+        const sorted = markets
+          .sort((a, b) => (b.volumeNum || b.totalVolume || 0) - (a.volumeNum || a.totalVolume || 0))
+          .slice(0, marketsPerPlatform);
+        balancedMarkets.push(...sorted);
+        console.log(`🔍 ${platform}: ${sorted.length} markets`);
+      });
+      
+      // Sort all balanced markets by volume and limit to requested amount
+      const finalMarkets = balancedMarkets
+        .sort((a, b) => (b.volumeNum || b.totalVolume || 0) - (a.volumeNum || a.totalVolume || 0))
         .slice(0, limit);
       
-      console.log('🔍 Final markets to return:', sortedMarkets.length);
-      return sortedMarkets;
+      console.log('🔍 Final markets to return:', finalMarkets.length);
+      console.log('🔍 Platform distribution:', finalMarkets.reduce((acc, m) => {
+        acc[m.platform] = (acc[m.platform] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>));
+      
+      return finalMarkets;
     } catch (error) {
       console.error('Error aggregating all markets:', error);
+      throw error;
+    }
+  }
+
+  // Get markets by timeframe (24h, 7d, 30d, future, trending)
+  async getMarketsByTimeframe(timeframe: string, limit: number = 200): Promise<PredictionMarket[]> {
+    try {
+      console.log('🔍 AggregationService: Getting markets by timeframe:', timeframe, 'limit:', limit);
+      
+      const platformPromises = this.platforms.map(platform => 
+        platform.api.getActiveMarkets(Math.ceil(limit / this.platforms.length), 0, timeframe)
+          .catch(error => {
+            console.error(`Error fetching ${timeframe} markets from ${platform.name}:`, error);
+            return [];
+          })
+      );
+
+      const results = await Promise.all(platformPromises);
+      const allMarkets = results.flat();
+      
+      // Sort based on timeframe
+      let sortedMarkets;
+      switch (timeframe) {
+        case '24h':
+          // Sort by recent volume and closing soon
+          sortedMarkets = allMarkets
+            .sort((a, b) => {
+              const aVolume = a.volumeNum || a.totalVolume || 0;
+              const bVolume = b.volumeNum || b.totalVolume || 0;
+              return bVolume - aVolume;
+            });
+          break;
+        case 'future':
+          // Sort by end date (furthest first)
+          sortedMarkets = allMarkets
+            .sort((a, b) => b.endDate.getTime() - a.endDate.getTime());
+          break;
+        case 'trending':
+          // Sort by volume and liquidity
+          sortedMarkets = allMarkets
+            .sort((a, b) => {
+              const aScore = (a.volumeNum || a.totalVolume || 0) + (a.liquidityNum || a.liquidity || 0);
+              const bScore = (b.volumeNum || b.totalVolume || 0) + (b.liquidityNum || b.liquidity || 0);
+              return bScore - aScore;
+            });
+          break;
+        default:
+          // Default sort by volume
+          sortedMarkets = allMarkets
+            .sort((a, b) => (b.volumeNum || b.totalVolume || 0) - (a.volumeNum || a.totalVolume || 0));
+      }
+      
+      return sortedMarkets.slice(0, limit);
+    } catch (error) {
+      console.error('Error aggregating markets by timeframe:', error);
       throw error;
     }
   }
@@ -234,7 +314,7 @@ export class AggregationService {
   }
 
   // Get featured markets (shuffled mix from all platforms)
-  async getFeaturedMarkets(limit: number = 300): Promise<PredictionMarket[]> {
+  async getFeaturedMarkets(limit: number = 500): Promise<PredictionMarket[]> {
     try {
       console.log('🔍 AggregationService: Getting featured markets from all platforms, limit:', limit);
       

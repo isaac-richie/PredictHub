@@ -9,12 +9,13 @@ export function WalletButton() {
         chainStatus="icon"
         accountStatus={{
           smallScreen: 'avatar',
-          largeScreen: 'full',
+          largeScreen: 'avatar',
         }}
         showBalance={{
           smallScreen: false,
-          largeScreen: true,
+          largeScreen: false,
         }}
+        label="Connect"
       />
     </div>
   );

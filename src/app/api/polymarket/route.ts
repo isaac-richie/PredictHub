@@ -653,11 +653,43 @@ export async function GET(request: NextRequest) {
         queryParams.delete('ascending');
       }
       
-      queryParams.set('closed', 'false');
-      queryParams.set('active', 'true');
-      // Increase default limit if not specified
-      if (!queryParams.has('limit')) {
-        queryParams.set('limit', '100');
+      // Get timeframe parameter to fetch different types of markets
+      const timeframe = searchParams.get('timeframe') || 'all';
+      
+      // Set different parameters based on timeframe
+      switch (timeframe) {
+        case '24h':
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          // Fetch markets that are closing soon or have high recent volume
+          queryParams.set('limit', '300');
+          break;
+        case '7d':
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          queryParams.set('limit', '400');
+          break;
+        case '30d':
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          queryParams.set('limit', '500');
+          break;
+        case 'future':
+          // Fetch upcoming markets (not closed, active, with future end dates)
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          queryParams.set('limit', '400');
+          break;
+        case 'trending':
+          // Fetch high-volume trending markets
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          queryParams.set('limit', '300');
+          break;
+        default:
+          queryParams.set('closed', 'false');
+          queryParams.set('active', 'true');
+          queryParams.set('limit', '500');
       }
     }
     
@@ -748,9 +780,9 @@ export async function GET(request: NextRequest) {
             title: market.title || market.question || 'Market Question',
             category, // Add extracted category
             endDate: market.endDate || market.end_time,
-            // Map volume fields
-            totalVolume: market.volumeAmm || market.volumeClob || market.volume1yr || 0,
-            volumeNum: market.volumeAmm || market.volumeClob || market.volume1yr || 0,
+            // Map volume fields - use the correct volumeNum field
+            totalVolume: market.volumeNum || market.volume || 0,
+            volumeNum: market.volumeNum || market.volume || 0,
             // Add external URL and slug for proper linking
             externalUrl: market.slug ? `https://polymarket.com/market/${market.slug}` : null,
             slug: market.slug,
