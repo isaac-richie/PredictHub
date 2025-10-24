@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 // Polygon: For Polymarket and Polkamarkets trading
 const wagmiConfig = getDefaultConfig({
   appName: 'PredictHub',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'a57b3b54d689f7423af373642a7a3110',
   chains: [base, baseSepolia, polygon, polygonAmoy],
   ssr: true,
 });
