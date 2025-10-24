@@ -550,7 +550,7 @@ export class AIIntelligenceService {
           sentimentAnalysis: this.config.sentimentAnalysisEnabled,
           pricePrediction: this.config.pricePredictionEnabled,
           marketIntelligence: this.config.marketIntelligenceEnabled,
-          recommendationsEnabled: this.config.recommendationsEnabled,
+          recommendations: this.config.recommendationsEnabled,
         },
       };
     } catch (error) {
