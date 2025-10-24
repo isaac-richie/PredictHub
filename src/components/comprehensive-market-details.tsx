@@ -159,7 +159,7 @@ export function ComprehensiveMarketDetails({ marketId, market }: ComprehensiveMa
               Ready to Trade?
             </h3>
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              Open this market on {market.platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'} to buy or sell positions
+              Open this market on {market.platform === 'polymarket' ? 'Polymarket' : 'Myriad'} to buy or sell positions
             </p>
           </div>
           <a
@@ -169,7 +169,7 @@ export function ComprehensiveMarketDetails({ marketId, market }: ComprehensiveMa
             className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
           >
             <ExternalLink className="w-5 h-5 mr-2" />
-            Trade on {market.platform === 'polymarket' ? 'Polymarket' : 'Polkamarkets'}
+            Trade on {market.platform === 'polymarket' ? 'Polymarket' : 'Myriad'}
           </a>
         </div>
       </div>

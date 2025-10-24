@@ -7,6 +7,14 @@ export const maxDuration = 60; // 60 seconds max for API routes
 
 const POLYMARKET_BASE_URL = 'https://gamma-api.polymarket.com';
 
+// Helper function to add CORS headers
+function addCorsHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return response;
+}
+
 // Handle price history requests with real Polymarket trades data
 async function handlePriceHistory(marketId: string, searchParams: URLSearchParams) {
   try {
@@ -25,7 +33,12 @@ async function handlePriceHistory(marketId: string, searchParams: URLSearchParam
     // First, fetch the market data to get CLOB token IDs
     let marketData = null;
     try {
-      const marketResponse = await fetch(`${POLYMARKET_BASE_URL}/markets?id=${actualMarketId}`);
+      const marketResponse = await fetch(`${POLYMARKET_BASE_URL}/markets?id=${actualMarketId}`, {
+        headers: {
+          'User-Agent': 'PredictHub/1.0',
+          'Accept': 'application/json',
+        }
+      });
       if (marketResponse.ok) {
         marketData = await marketResponse.json();
         console.log('🔍 Price History: Fetched market data:', marketData.length || 'unknown', 'markets');
@@ -57,8 +70,8 @@ async function handlePriceHistory(marketId: string, searchParams: URLSearchParam
       try {
         const response = await fetch(clobApiUrl, {
           headers: {
+            'User-Agent': 'PredictHub/1.0',
             'Accept': 'application/json',
-            'User-Agent': 'PredictionTracker/1.0'
           }
         });
         
@@ -70,7 +83,7 @@ async function handlePriceHistory(marketId: string, searchParams: URLSearchParam
             // Process the real CLOB data into chart format
             const processedData = processClobDataToChartData(apiData.history, timeRange);
             console.log('🔍 Price History: Processed', processedData.length, 'real data points for chart');
-            return NextResponse.json(processedData);
+            return addCorsHeaders(NextResponse.json(processedData));
           } else {
             console.log('🔍 Price History: No price history found for this market');
           }
@@ -85,14 +98,14 @@ async function handlePriceHistory(marketId: string, searchParams: URLSearchParam
     // Use enhanced realistic mock data (Polymarket API price history not accessible)
     console.log('🔍 Price History: Using enhanced realistic mock data for charts');
     const mockPriceHistory = generateMockPriceHistory(timeRange);
-    return NextResponse.json(mockPriceHistory);
+    return addCorsHeaders(NextResponse.json(mockPriceHistory));
     
   } catch (error) {
     console.error('🔍 Price History: Error fetching real price history:', error);
     // Fallback to mock data on any error
     const mockPriceHistory = generateMockPriceHistory(searchParams.get('timeRange') || '24h');
     console.log('🔍 Price History: Using fallback mock data due to error');
-    return NextResponse.json(mockPriceHistory);
+    return addCorsHeaders(NextResponse.json(mockPriceHistory));
   }
 }
 
@@ -381,8 +394,8 @@ async function handleDebugPriceHistory(marketId: string) {
     try {
       const response1 = await fetch(priceHistoryUrl, {
         headers: {
+          'User-Agent': 'PredictHub/1.0',
           'Accept': 'application/json',
-          'User-Agent': 'PredictionTracker/1.0'
         }
       });
       debugInfo.tests.pricesHistory = {
@@ -400,8 +413,8 @@ async function handleDebugPriceHistory(marketId: string) {
     try {
       const response2 = await fetch(tradesUrl, {
         headers: {
+          'User-Agent': 'PredictHub/1.0',
           'Accept': 'application/json',
-          'User-Agent': 'PredictionTracker/1.0'
         }
       });
       debugInfo.tests.trades = {
@@ -415,9 +428,9 @@ async function handleDebugPriceHistory(marketId: string) {
       };
     }
     
-    return NextResponse.json(debugInfo);
+    return addCorsHeaders(NextResponse.json(debugInfo));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
+    return addCorsHeaders(NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 }));
   }
 }
 
@@ -430,13 +443,13 @@ async function handleMarketDetails(marketId: string) {
     const marketDetails = generateComprehensiveMarketData(marketId);
     
     console.log('🔍 Market Details: Generated comprehensive data for market:', marketId);
-    return NextResponse.json(marketDetails);
+    return addCorsHeaders(NextResponse.json(marketDetails));
   } catch (error) {
     console.error('🔍 Market Details: Error generating market details:', error);
-    return NextResponse.json(
+    return addCorsHeaders(NextResponse.json(
       { error: 'Failed to fetch market details' },
       { status: 500 }
-    );
+    ));
   }
 }
 
@@ -700,8 +713,8 @@ export async function GET(request: NextRequest) {
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
+        'User-Agent': 'PredictHub/1.0',
         'Accept': 'application/json',
-        'User-Agent': 'Polymarket-Tracker/1.0',
       },
       // Add timeout
       signal: AbortSignal.timeout(15000),
@@ -709,10 +722,10 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       console.error('🔍 API Proxy: Polymarket API error:', response.status, response.statusText);
-      return NextResponse.json(
+      return addCorsHeaders(NextResponse.json(
         { error: `Polymarket API error: ${response.status} ${response.statusText}` },
         { status: response.status }
-      );
+      ));
     }
 
     const data = await response.json();
@@ -801,15 +814,15 @@ export async function GET(request: NextRequest) {
       console.log('🔍 API Proxy: Processed and sorted markets by creation date (most recent first)');
       console.log('🔍 API Proxy: First market created:', sortedData[0]?.createdAt || sortedData[0]?.startDate);
       console.log('🔍 API Proxy: Last market created:', sortedData[sortedData.length - 1]?.createdAt || sortedData[sortedData.length - 1]?.startDate);
-      return NextResponse.json(sortedData);
+      return addCorsHeaders(NextResponse.json(sortedData));
     }
     
-    return NextResponse.json(data);
+    return addCorsHeaders(NextResponse.json(data));
   } catch (error) {
     console.error('🔍 API Proxy: Error fetching from Polymarket:', error);
-    return NextResponse.json(
+    return addCorsHeaders(NextResponse.json(
       { error: 'Failed to fetch data from Polymarket API' },
       { status: 500 }
-    );
+    ));
   }
 }

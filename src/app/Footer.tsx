@@ -51,7 +51,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link href="https://polkamarkets.com" target="_blank" className="text-xs text-gray-400 hover:text-purple-400 transition-colors">
-                  Polkamarkets
+                  Myriad
                 </Link>
               </li>
               <li>
